@@ -1,0 +1,28 @@
+{
+  "authBypass": {
+    "enabled": true,
+    "description": "Bypass authentication and use a demo user for development/testing",
+    "category": "authentication",
+    "demoUser": {
+      "id": "demo-user-001",
+      "email": "demo@confuse.dev",
+      "name": "Demo Developer",
+      "roles": [
+        "user",
+        "developer",
+        "admin"
+      ],
+      "sessionId": "demo-session-001"
+    }
+  },
+  "debugLogging": {
+    "enabled": false,
+    "description": "Enable verbose debug logging across all services",
+    "category": "debugging"
+  },
+  "skipRateLimiting": {
+    "enabled": false,
+    "description": "Disable rate limiting for API endpoints during testing",
+    "category": "performance"
+  }
+}
