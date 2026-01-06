@@ -2,6 +2,14 @@
 
 Developer feature toggle dashboard for the ConFuse platform. This is a private dev tool for controlling features, bypassing authentication during testing, and enabling debug modes.
 
+> [!IMPORTANT]
+> **Development Environment Only** — This tool is designed exclusively for local development and testing. Feature toggles configured here:
+> - ✅ Affect local development servers when restarted
+> - ❌ Do NOT affect production builds or deployments
+> - ❌ Do NOT persist beyond the development environment
+>
+> Changes take effect after restarting the affected service(s).
+
 ## Quick Start
 
 ```bash
