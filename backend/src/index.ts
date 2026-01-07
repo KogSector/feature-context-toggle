@@ -7,7 +7,8 @@
 import express from 'express';
 import cors from 'cors';
 import helmet from 'helmet';
-import toggleRoutes from './routes/toggles.js';
+import { db } from './database.js';
+import toggleRoutes from './routes/toggles-db.js';
 
 const app = express();
 const PORT = process.env.PORT || 3099;
