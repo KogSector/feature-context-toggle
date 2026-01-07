@@ -1,25 +1,29 @@
 {
-    "name": "feature-context-toggle-backend",
-    "version": "1.0.0",
-    "description": "Backend API for feature toggle management",
-    "main": "dist/index.js",
-    "scripts": {
-        "dev": "tsx watch src/index.ts",
-        "build": "tsc",
-        "start": "node dist/index.js",
-        "test": "vitest"
-    },
-    "dependencies": {
-        "cors": "^2.8.5",
-        "express": "^4.18.2",
-        "helmet": "^7.1.0"
-    },
-    "devDependencies": {
-        "@types/cors": "^2.8.17",
-        "@types/express": "^4.17.21",
-        "@types/node": "^20.10.0",
-        "tsx": "^4.7.0",
-        "typescript": "^5.3.3",
-        "vitest": "^1.1.0"
-    }
+  "name": "feature-context-toggle-backend",
+  "version": "1.0.0",
+  "description": "Backend API for feature toggle management with shared database",
+  "main": "dist/index.js",
+  "type": "module",
+  "scripts": {
+    "dev": "tsx watch src/index.ts",
+    "build": "tsc",
+    "start": "node dist/index.js",
+    "db:migrate": "node -e \"import('./src/database.js').then(({db}) => db.migrate())\"",
+    "db:seed": "psql -h localhost -U confuse -d confuse_shared -f database/schema.sql"
+  },
+  "dependencies": {
+    "express": "^4.18.2",
+    "cors": "^2.8.5",
+    "helmet": "^7.1.0",
+    "pg": "^8.11.3",
+    "dotenv": "^16.3.1"
+  },
+  "devDependencies": {
+    "@types/express": "^4.17.21",
+    "@types/cors": "^2.8.17",
+    "@types/pg": "^8.10.9",
+    "@types/node": "^20.10.0",
+    "tsx": "^4.6.0",
+    "typescript": "^5.3.0"
+  }
 }
