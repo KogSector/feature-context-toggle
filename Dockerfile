@@ -1,5 +1,5 @@
-# Feature Toggle Backend - Dockerfile
-FROM node:20-alpine
+# Feature Toggle Backend - Dockerfile (Node.js 24 LTS)
+FROM node:24-alpine
 
 WORKDIR /app
 
