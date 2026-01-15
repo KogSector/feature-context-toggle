@@ -1,4 +1,9 @@
+# =============================================================================
 # Feature Toggle Backend - Dockerfile (Node.js 24 LTS)
+# Port: 3099
+# Role: Central feature toggle service for the ConFuse platform
+# =============================================================================
+
 FROM node:24-alpine
 
 WORKDIR /app
@@ -12,9 +17,9 @@ COPY tsconfig.json ./
 # Copy backend directory
 COPY backend ./backend
 
-# Install all dependencies (including dev for build)
+# Install all dependencies (including dev for build) with reproducible installs
 WORKDIR /app/backend
-RUN npm install
+RUN npm ci
 
 # Build TypeScript
 RUN npm run build
