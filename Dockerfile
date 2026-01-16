@@ -19,7 +19,7 @@ COPY backend ./backend
 
 # Install all dependencies (including dev for build) with reproducible installs
 WORKDIR /app/backend
-RUN npm ci
+RUN npm install
 
 # Build TypeScript
 RUN npm run build
