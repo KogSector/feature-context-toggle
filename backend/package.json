@@ -1,21 +1,21 @@
 {
   "name": "feature-context-toggle-backend",
   "version": "1.0.0",
-  "description": "Backend API for feature toggle management with shared database",
+  "description": "Backend API for feature toggle management with PostgreSQL and Redis",
   "main": "dist/index.js",
   "type": "module",
   "scripts": {
     "dev": "tsx watch src/index.ts",
     "build": "tsc",
     "start": "node dist/index.js",
-    "db:migrate": "node -e \"import('./src/database.js').then(({db}) => db.migrate())\"",
-    "db:seed": "psql -h localhost -U confuse -d confuse_shared -f database/schema.sql"
+    "db:migrate": "psql -h ${DB_HOST:-localhost} -U ${DB_USER:-confuse} -d ${DB_NAME:-confuse_shared} -f ../database/schema.sql"
   },
   "dependencies": {
     "express": "^4.18.2",
     "cors": "^2.8.5",
     "helmet": "^7.1.0",
     "pg": "^8.11.3",
+    "redis": "^4.6.12",
     "dotenv": "^16.3.1"
   },
   "devDependencies": {

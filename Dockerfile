@@ -14,10 +14,13 @@ RUN apk add --no-cache wget
 # Copy root tsconfig (needed by backend)
 COPY tsconfig.json ./
 
+# Copy database schema for initialization
+COPY database ./database
+
 # Copy backend directory
 COPY backend ./backend
 
-# Install all dependencies (including dev for build) with reproducible installs
+# Install dependencies
 WORKDIR /app/backend
 RUN npm install
 
