@@ -7,14 +7,7 @@
 
 import { createClient, RedisClientType } from 'redis';
 import type { Toggle } from './database.js';
-
-// =============================================================================
-// Configuration
-// =============================================================================
-
-const CACHE_TTL_SECONDS = 5; // Short TTL to ensure freshness
-const CACHE_KEY_PREFIX = 'toggle:';
-const ALL_TOGGLES_KEY = 'toggles:all';
+import { getConfig } from './config.js';
 
 // =============================================================================
 // Cache Manager
@@ -24,6 +17,9 @@ export class CacheManager {
     private client: RedisClientType | null = null;
     private connected: boolean = false;
     private connecting: boolean = false;
+    private cacheTtlSeconds: number = 5;
+    private cacheKeyPrefix: string = 'toggle:';
+    private allTogglesKey: string = 'toggles:all';
 
     /**
      * Initialize Redis connection
@@ -34,7 +30,13 @@ export class CacheManager {
         }
 
         this.connecting = true;
-        const redisUrl = process.env.REDIS_URL || 'redis://localhost:6379/2';
+
+        // Load configuration
+        const config = getConfig();
+        const redisUrl = config.redis.url;
+        this.cacheTtlSeconds = config.redis.cacheTtlSeconds;
+        this.cacheKeyPrefix = config.redis.cacheKeyPrefix;
+        this.allTogglesKey = config.redis.allTogglesKey;
 
         try {
             this.client = createClient({ url: redisUrl });
@@ -79,7 +81,7 @@ export class CacheManager {
         if (!this.isAvailable()) return null;
 
         try {
-            const cached = await this.client!.get(`${CACHE_KEY_PREFIX}${name}`);
+            const cached = await this.client!.get(`${this.cacheKeyPrefix}${name}`);
             if (cached) {
                 return JSON.parse(cached);
             }
@@ -98,8 +100,8 @@ export class CacheManager {
 
         try {
             await this.client!.setEx(
-                `${CACHE_KEY_PREFIX}${name}`,
-                CACHE_TTL_SECONDS,
+                `${this.cacheKeyPrefix}${name}`,
+                this.cacheTtlSeconds,
                 JSON.stringify(toggle)
             );
         } catch (error) {
@@ -114,7 +116,7 @@ export class CacheManager {
         if (!this.isAvailable()) return null;
 
         try {
-            const cached = await this.client!.get(ALL_TOGGLES_KEY);
+            const cached = await this.client!.get(this.allTogglesKey);
             if (cached) {
                 return JSON.parse(cached);
             }
@@ -133,8 +135,8 @@ export class CacheManager {
 
         try {
             await this.client!.setEx(
-                ALL_TOGGLES_KEY,
-                CACHE_TTL_SECONDS,
+                this.allTogglesKey,
+                this.cacheTtlSeconds,
                 JSON.stringify(toggles)
             );
 
@@ -142,8 +144,8 @@ export class CacheManager {
             const pipeline = this.client!.multi();
             for (const toggle of toggles) {
                 pipeline.setEx(
-                    `${CACHE_KEY_PREFIX}${toggle.name}`,
-                    CACHE_TTL_SECONDS,
+                    `${this.cacheKeyPrefix}${toggle.name}`,
+                    this.cacheTtlSeconds,
                     JSON.stringify(toggle)
                 );
             }
@@ -161,8 +163,8 @@ export class CacheManager {
 
         try {
             await this.client!.del([
-                `${CACHE_KEY_PREFIX}${name}`,
-                ALL_TOGGLES_KEY,
+                `${this.cacheKeyPrefix}${name}`,
+                this.allTogglesKey,
             ]);
         } catch (error) {
             console.warn('Cache invalidate error:', error);
@@ -177,11 +179,11 @@ export class CacheManager {
 
         try {
             // Get all toggle keys and delete them
-            const keys = await this.client!.keys(`${CACHE_KEY_PREFIX}*`);
+            const keys = await this.client!.keys(`${this.cacheKeyPrefix}*`);
             if (keys.length > 0) {
                 await this.client!.del(keys);
             }
-            await this.client!.del(ALL_TOGGLES_KEY);
+            await this.client!.del(this.allTogglesKey);
         } catch (error) {
             console.warn('Cache invalidate all error:', error);
         }

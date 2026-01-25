@@ -4,6 +4,8 @@
  * Validates toggle inputs and enforces naming conventions.
  */
 
+import { getConfig } from './config.js';
+
 // =============================================================================
 // Types
 // =============================================================================
@@ -41,10 +43,11 @@ const VALID_CATEGORIES = [
 // camelCase pattern: starts with lowercase, followed by alphanumeric
 const CAMEL_CASE_PATTERN = /^[a-z][a-zA-Z0-9]*$/;
 
-const MIN_NAME_LENGTH = 3;
-const MAX_NAME_LENGTH = 50;
-const MIN_DESCRIPTION_LENGTH = 10;
-const MAX_DESCRIPTION_LENGTH = 500;
+// Get validation config (lazy-loaded to allow config initialization)
+function getValidationConfig() {
+    const config = getConfig();
+    return config.validation;
+}
 
 // =============================================================================
 // Validation Functions
@@ -55,18 +58,19 @@ const MAX_DESCRIPTION_LENGTH = 500;
  */
 export function validateToggleName(name: string): ValidationResult {
     const errors: string[] = [];
+    const { minNameLength, maxNameLength } = getValidationConfig();
 
     if (!name || typeof name !== 'string') {
         errors.push('Toggle name is required');
         return { valid: false, errors };
     }
 
-    if (name.length < MIN_NAME_LENGTH) {
-        errors.push(`Toggle name must be at least ${MIN_NAME_LENGTH} characters`);
+    if (name.length < minNameLength) {
+        errors.push(`Toggle name must be at least ${minNameLength} characters`);
     }
 
-    if (name.length > MAX_NAME_LENGTH) {
-        errors.push(`Toggle name must be at most ${MAX_NAME_LENGTH} characters`);
+    if (name.length > maxNameLength) {
+        errors.push(`Toggle name must be at most ${maxNameLength} characters`);
     }
 
     if (!CAMEL_CASE_PATTERN.test(name)) {
@@ -81,18 +85,19 @@ export function validateToggleName(name: string): ValidationResult {
  */
 export function validateDescription(description: string): ValidationResult {
     const errors: string[] = [];
+    const { minDescriptionLength, maxDescriptionLength } = getValidationConfig();
 
     if (!description || typeof description !== 'string') {
         errors.push('Toggle description is required');
         return { valid: false, errors };
     }
 
-    if (description.length < MIN_DESCRIPTION_LENGTH) {
-        errors.push(`Description must be at least ${MIN_DESCRIPTION_LENGTH} characters`);
+    if (description.length < minDescriptionLength) {
+        errors.push(`Description must be at least ${minDescriptionLength} characters`);
     }
 
-    if (description.length > MAX_DESCRIPTION_LENGTH) {
-        errors.push(`Description must be at most ${MAX_DESCRIPTION_LENGTH} characters`);
+    if (description.length > maxDescriptionLength) {
+        errors.push(`Description must be at most ${maxDescriptionLength} characters`);
     }
 
     return { valid: errors.length === 0, errors };

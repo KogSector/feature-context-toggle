@@ -4,16 +4,21 @@
  * Express server for managing feature toggles with PostgreSQL and Redis.
  */
 
+import 'dotenv/config';
 import express from 'express';
 import cors from 'cors';
 import helmet from 'helmet';
+import { loadConfig, getConfig } from './config.js';
 import { db } from './database.js';
 import { cache } from './cache.js';
 import toggleRoutes from './routes/toggles-db.js';
 import type { HealthResponse } from './types/index.js';
 
+// Load configuration first (validates required env vars)
+const appConfig = loadConfig();
+
 const app = express();
-const PORT = process.env.PORT || 3099;
+const PORT = appConfig.port;
 const VERSION = process.env.npm_package_version || '1.0.0';
 
 // =============================================================================
@@ -24,13 +29,7 @@ app.use(helmet());
 // =============================================================================
 // CORS Configuration
 // =============================================================================
-const corsOrigins = process.env.CORS_ORIGINS?.split(',') || [
-    'http://localhost:5173',    // Vite dev server
-    'http://localhost:3000',    // Frontend
-    'http://localhost:3099',    // Self (dashboard)
-    'http://127.0.0.1:5173',
-    'http://127.0.0.1:3000',
-];
+const corsOrigins = appConfig.corsOrigins;
 
 app.use(cors({
     origin: corsOrigins,

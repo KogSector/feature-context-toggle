@@ -7,6 +7,7 @@
 import { Router, Request, Response } from 'express';
 import { db, Toggle } from '../database.js';
 import { cache } from '../cache.js';
+import { getConfig } from '../config.js';
 import {
     validateCreateToggle,
     validateUpdateToggle,
@@ -149,8 +150,9 @@ router.get('/categories', async (_req: Request, res: Response) => {
 // =============================================================================
 router.get('/audit', async (req: Request, res: Response) => {
     try {
-        const limit = parseInt(req.query.limit as string) || 100;
-        const auditLog = await db.getRecentAuditLog(Math.min(limit, 500));
+        const config = getConfig();
+        const limit = parseInt(req.query.limit as string) || config.apiLimits.defaultAuditLimit;
+        const auditLog = await db.getRecentAuditLog(Math.min(limit, config.apiLimits.maxAuditLimit));
 
         res.json({
             success: true,
@@ -251,7 +253,8 @@ router.get('/:name', async (req: Request, res: Response) => {
 router.get('/:name/history', async (req: Request, res: Response) => {
     try {
         const { name } = req.params;
-        const limit = parseInt(req.query.limit as string) || 50;
+        const config = getConfig();
+        const limit = parseInt(req.query.limit as string) || config.apiLimits.defaultHistoryLimit;
 
         // Verify toggle exists
         const toggle = await db.getToggle(name);
@@ -263,7 +266,7 @@ router.get('/:name/history', async (req: Request, res: Response) => {
             } as ApiResponse);
         }
 
-        const history = await db.getToggleHistory(name, Math.min(limit, 200));
+        const history = await db.getToggleHistory(name, Math.min(limit, config.apiLimits.maxHistoryLimit));
 
         res.json({
             success: true,

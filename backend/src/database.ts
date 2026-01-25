@@ -9,10 +9,14 @@ import { Pool, PoolClient } from 'pg';
 import * as fs from 'fs';
 import * as path from 'path';
 import { fileURLToPath } from 'url';
+import { getConfig, type Config } from './config.js';
 
 // ESM __dirname equivalent
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
+
+// Whitelist of allowed schema names (SQL injection protection)
+const ALLOWED_SCHEMAS = ['feature_toggles', 'public'];
 
 // =============================================================================
 // Types
@@ -71,17 +75,27 @@ export class DatabaseManager {
   private pool: Pool;
   private config: DatabaseConfig;
   private initialized: boolean = false;
-  private isProduction: boolean = process.env.NODE_ENV === 'production';
+  private isProduction: boolean;
 
   constructor() {
+    // Load configuration from environment
+    const appConfig = getConfig();
+
     this.config = {
-      host: process.env.DB_HOST || 'localhost',
-      port: parseInt(process.env.DB_PORT || '5432'),
-      database: process.env.DB_NAME || 'confuse_shared',
-      user: process.env.DB_USER || 'confuse',
-      password: process.env.DB_PASSWORD || 'confuse_pg_secret',
-      schema: 'feature_toggles'
+      host: appConfig.db.host,
+      port: appConfig.db.port,
+      database: appConfig.db.name,
+      user: appConfig.db.user,
+      password: appConfig.db.password,
+      schema: appConfig.db.schema,
     };
+
+    this.isProduction = appConfig.isProduction;
+
+    // Validate schema name to prevent SQL injection
+    if (!ALLOWED_SCHEMAS.includes(this.config.schema)) {
+      throw new Error(`Invalid schema name: ${this.config.schema}. Allowed: ${ALLOWED_SCHEMAS.join(', ')}`);
+    }
 
     this.pool = new Pool({
       host: this.config.host,
@@ -94,7 +108,7 @@ export class DatabaseManager {
       connectionTimeoutMillis: 5000,
     });
 
-    // Set default schema on connection
+    // Set default schema on connection (safe - validated above)
     this.pool.on('connect', (client) => {
       client.query(`SET search_path TO ${this.config.schema}, public`);
     });
