@@ -1,8 +1,21 @@
 # =============================================================================
-# Feature Toggle Backend - Dockerfile (Node.js 24 LTS)
+# Feature Toggle Service - Dockerfile (Node.js 24 LTS)
 # Role: Central feature toggle service for the ConFuse platform
+# Includes both backend API and frontend dashboard
 # =============================================================================
 
+FROM node:24-alpine AS frontend-builder
+
+WORKDIR /app
+# Copy root tsconfig (frontend extends it)
+COPY tsconfig.json ./
+WORKDIR /app/frontend
+COPY frontend/package*.json ./
+RUN npm install
+COPY frontend ./
+RUN npm run build
+
+# =============================================================================
 FROM node:24-alpine
 
 WORKDIR /app
@@ -28,6 +41,9 @@ RUN npm run build
 
 # Remove dev dependencies after build
 RUN npm prune --production
+
+# Copy frontend build from builder stage
+COPY --from=frontend-builder /app/frontend/dist /app/backend/public
 
 # =============================================================================
 # Environment Variables (configure via docker run -e or docker-compose)

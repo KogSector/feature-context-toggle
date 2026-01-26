@@ -8,11 +8,16 @@ import 'dotenv/config';
 import express from 'express';
 import cors from 'cors';
 import helmet from 'helmet';
+import path from 'path';
+import { fileURLToPath } from 'url';
 import { loadConfig, getConfig } from './config.js';
 import { getDb } from './database.js';
 import { cache } from './cache.js';
 import toggleRoutes from './routes/toggles-db.js';
 import type { HealthResponse } from './types/index.js';
+
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
 
 // Load configuration first (validates required env vars)
 console.log('[STARTUP] Loading configuration...');
@@ -96,7 +101,33 @@ app.get('/health', async (_req, res) => {
 app.use('/api/toggles', toggleRoutes);
 
 // =============================================================================
-// 404 Handler
+// Static Files - Serve Frontend Dashboard
+// =============================================================================
+const publicPath = path.join(__dirname, '..', 'public');
+app.use(express.static(publicPath));
+
+// SPA fallback - serve index.html for all non-API routes
+app.get('*', (req, res, next) => {
+    // Skip API routes
+    if (req.path.startsWith('/api') || req.path === '/health') {
+        return next();
+    }
+    res.sendFile(path.join(publicPath, 'index.html'), (err) => {
+        if (err) {
+            // If index.html doesn't exist, return 404
+            res.status(404).json({
+                success: false,
+                error: 'Frontend not available',
+                message: 'The dashboard UI is not built. Run: cd frontend && npm run build',
+                path: req.path,
+                timestamp: new Date().toISOString(),
+            });
+        }
+    });
+});
+
+// =============================================================================
+// 404 Handler (for API routes only)
 // =============================================================================
 app.use((req, res) => {
     res.status(404).json({
