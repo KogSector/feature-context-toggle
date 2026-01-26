@@ -78,6 +78,7 @@ export class DatabaseManager {
   private isProduction: boolean;
 
   constructor() {
+    console.log('[DATABASE] Initializing DatabaseManager...');
     // Load configuration from environment
     const appConfig = getConfig();
 
@@ -112,7 +113,8 @@ export class DatabaseManager {
       ssl: sslConfig,
     });
 
-    console.log(`📦 Database: ${appConfig.db.useContainer ? 'Container PostgreSQL' : 'NeonDB'} @ ${this.config.host}`);
+    console.log(`[DATABASE] 📦 Database: ${appConfig.db.useContainer ? 'Container PostgreSQL' : 'NeonDB'} @ ${this.config.host}:${this.config.port}`);
+    console.log(`[DATABASE] Database name: ${this.config.database}, Schema: ${this.config.schema}`);
 
     // Set default schema on connection (safe - validated above)
     this.pool.on('connect', (client) => {
@@ -121,8 +123,10 @@ export class DatabaseManager {
 
     // Log pool errors
     this.pool.on('error', (err) => {
-      console.error('Unexpected database pool error:', err);
+      console.error('[DATABASE] [ERROR] Unexpected database pool error:', err);
     });
+    
+    console.log('[DATABASE] DatabaseManager initialized successfully');
   }
 
   // =========================================================================
@@ -134,28 +138,36 @@ export class DatabaseManager {
    */
   async initialize(): Promise<boolean> {
     if (this.initialized) {
+      console.log('[DATABASE] Already initialized, skipping...');
       return true;
     }
 
     try {
-      console.log('🔄 Initializing database...');
+      console.log('[DATABASE] 🔄 Initializing database schema...');
+      console.log('[DATABASE] Timestamp:', new Date().toISOString());
 
       // Read and execute schema file
       const schemaPath = path.resolve(__dirname, '../../database/schema.sql');
 
       if (fs.existsSync(schemaPath)) {
+        console.log('[DATABASE] Found schema file at:', schemaPath);
         const schema = fs.readFileSync(schemaPath, 'utf-8');
+        console.log('[DATABASE] Executing schema SQL...');
         await this.pool.query(schema);
-        console.log('✅ Database schema initialized');
+        console.log('[DATABASE] ✅ Database schema initialized successfully');
       } else {
-        console.warn('⚠️ Schema file not found, creating minimal schema...');
+        console.warn('[DATABASE] ⚠️ Schema file not found at:', schemaPath);
+        console.log('[DATABASE] Creating minimal schema...');
         await this.createMinimalSchema();
+        console.log('[DATABASE] Minimal schema created successfully');
       }
 
       this.initialized = true;
+      console.log('[DATABASE] Database initialization complete');
       return true;
     } catch (error) {
-      console.error('❌ Failed to initialize database:', error);
+      console.error('[DATABASE] ❌ Failed to initialize database:', error);
+      console.error('[DATABASE] Error details:', error instanceof Error ? error.message : 'Unknown error');
       return false;
     }
   }
@@ -200,17 +212,22 @@ export class DatabaseManager {
    * Health check - verify database connectivity
    */
   async healthCheck(): Promise<{ healthy: boolean; latencyMs: number; error?: string }> {
+    console.log('[DATABASE] [HEALTH] Performing health check...');
     const start = Date.now();
     try {
       await this.pool.query('SELECT 1');
+      const latency = Date.now() - start;
+      console.log(`[DATABASE] [HEALTH] Health check passed, latency: ${latency}ms`);
       return {
         healthy: true,
-        latencyMs: Date.now() - start,
+        latencyMs: latency,
       };
     } catch (error) {
+      const latency = Date.now() - start;
+      console.error(`[DATABASE] [HEALTH] Health check failed, latency: ${latency}ms`, error);
       return {
         healthy: false,
-        latencyMs: Date.now() - start,
+        latencyMs: latency,
         error: error instanceof Error ? error.message : 'Unknown error',
       };
     }
@@ -224,17 +241,21 @@ export class DatabaseManager {
    * Get a single toggle by name
    */
   async getToggle(name: string): Promise<Toggle | null> {
+    console.log(`[DATABASE] [QUERY] getToggle called for: ${name}`);
     const result = await this.pool.query(
       'SELECT * FROM toggles WHERE name = $1',
       [name]
     );
-    return result.rows[0] || null;
+    const toggle = result.rows[0] || null;
+    console.log(`[DATABASE] [QUERY] getToggle result for '${name}':`, toggle ? 'found' : 'not found');
+    return toggle;
   }
 
   /**
    * Get all toggles, optionally filtered by category
    */
   async getAllToggles(category?: string, categoryType?: string): Promise<Toggle[]> {
+    console.log('[DATABASE] [QUERY] getAllToggles called', { category, categoryType });
     let query = 'SELECT * FROM toggles';
     const params: string[] = [];
     const conditions: string[] = [];
@@ -261,6 +282,7 @@ export class DatabaseManager {
     query += ' ORDER BY category, name';
 
     const result = await this.pool.query(query, params);
+    console.log(`[DATABASE] [QUERY] getAllToggles returned ${result.rows.length} toggles`);
     return result.rows;
   }
 
@@ -268,6 +290,7 @@ export class DatabaseManager {
    * Create a new toggle
    */
   async createToggle(input: CreateToggleInput, changedBy: string = 'system'): Promise<Toggle> {
+    console.log(`[DATABASE] [CREATE] Creating toggle: ${input.name}`, { changedBy, category: input.category, categoryType: input.categoryType });
     const client = await this.pool.connect();
 
     try {
@@ -300,9 +323,11 @@ export class DatabaseManager {
       });
 
       await client.query('COMMIT');
+      console.log(`[DATABASE] [CREATE] Toggle '${input.name}' created successfully`);
       return toggle;
     } catch (error) {
       await client.query('ROLLBACK');
+      console.error(`[DATABASE] [CREATE] Failed to create toggle '${input.name}':`, error);
       throw error;
     } finally {
       client.release();
@@ -359,9 +384,11 @@ export class DatabaseManager {
       });
 
       await client.query('COMMIT');
+      console.log(`[DATABASE] [UPDATE] Toggle '${name}' updated to enabled=${enabled}`);
       return toggle;
     } catch (error) {
       await client.query('ROLLBACK');
+      console.error(`[DATABASE] [UPDATE] Failed to update toggle '${name}':`, error);
       throw error;
     } finally {
       client.release();
@@ -376,6 +403,7 @@ export class DatabaseManager {
     metadata: Record<string, unknown>,
     changedBy: string = 'system'
   ): Promise<Toggle | null> {
+    console.log(`[DATABASE] [METADATA] Updating metadata for toggle '${name}'`, { changedBy });
     const client = await this.pool.connect();
 
     try {
@@ -424,6 +452,7 @@ export class DatabaseManager {
    * Delete a toggle
    */
   async deleteToggle(name: string, changedBy: string = 'system'): Promise<boolean> {
+    console.log(`[DATABASE] [DELETE] Deleting toggle '${name}'`, { changedBy });
     const client = await this.pool.connect();
 
     try {
@@ -452,9 +481,11 @@ export class DatabaseManager {
       });
 
       await client.query('COMMIT');
+      console.log(`[DATABASE] [DELETE] Toggle '${name}' deleted successfully`);
       return true;
     } catch (error) {
       await client.query('ROLLBACK');
+      console.error(`[DATABASE] [DELETE] Failed to delete toggle '${name}':`, error);
       throw error;
     } finally {
       client.release();
@@ -472,6 +503,7 @@ export class DatabaseManager {
     updates: Array<{ name: string; enabled: boolean }>,
     changedBy: string = 'system'
   ): Promise<Toggle[]> {
+    console.log(`[DATABASE] [BULK] Bulk updating ${updates.length} toggles`, { changedBy });
     const results: Toggle[] = [];
 
     for (const update of updates) {
@@ -492,8 +524,10 @@ export class DatabaseManager {
    * Get demo user for auth bypass
    */
   async getDemoUser(toggleName: string = 'authBypass'): Promise<Record<string, unknown> | null> {
+    console.log(`[DATABASE] [DEMO] Getting demo user for toggle: ${toggleName}`);
     // In production, never return demo user
     if (this.isProduction) {
+      console.log('[DATABASE] [DEMO] Production mode - demo user disabled');
       return null;
     }
 
@@ -504,8 +538,10 @@ export class DatabaseManager {
     );
 
     if (result.rows[0]?.demo_user) {
+      console.log('[DATABASE] [DEMO] Demo user found and returned');
       return JSON.parse(result.rows[0].demo_user);
     }
+    console.log('[DATABASE] [DEMO] No demo user found or toggle disabled');
     return null;
   }
 
@@ -585,7 +621,9 @@ export class DatabaseManager {
    * Close database connections
    */
   async close(): Promise<void> {
+    console.log('[DATABASE] Closing database connection pool...');
     await this.pool.end();
+    console.log('[DATABASE] Database connection pool closed');
   }
 }
 
@@ -597,6 +635,7 @@ let _db: DatabaseManager | null = null;
  */
 export function getDb(): DatabaseManager {
     if (!_db) {
+        console.log('[DATABASE] Creating new DatabaseManager instance');
         _db = new DatabaseManager();
     }
     return _db;

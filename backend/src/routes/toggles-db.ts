@@ -73,13 +73,16 @@ function toToggleState(toggles: Toggle[]): ToggleState {
 // GET /api/toggles - Get all toggles
 // =============================================================================
 router.get('/', async (req: Request, res: Response) => {
+    console.log('[ROUTE] GET /api/toggles - Fetching all toggles', { category: req.query.category, categoryType: req.query.categoryType, format: req.query.format });
     try {
         const { category, categoryType, format } = req.query;
 
         // Try cache first (only for unfiltered requests)
         if (!category && !categoryType) {
+            console.log('[ROUTE] GET /api/toggles - Checking cache for unfiltered request');
             const cached = await cache.getAllToggles();
             if (cached) {
+                console.log(`[ROUTE] GET /api/toggles - Cache hit, returning ${cached.length} toggles`);
                 const togglesObj = toToggleState(cached);
                 return res.json({
                     success: true,
@@ -91,10 +94,12 @@ router.get('/', async (req: Request, res: Response) => {
         }
 
         // Fetch from database
+        console.log('[ROUTE] GET /api/toggles - Fetching from database');
         const toggles = await getDb().getAllToggles(
             category as string | undefined,
             categoryType as string | undefined
         );
+        console.log(`[ROUTE] GET /api/toggles - Database returned ${toggles.length} toggles`);
 
         // Cache if unfiltered
         if (!category && !categoryType) {
@@ -112,7 +117,7 @@ router.get('/', async (req: Request, res: Response) => {
             timestamp: new Date().toISOString(),
         } as ApiResponse);
     } catch (error) {
-        console.error('Error fetching toggles:', error);
+        console.error('[ROUTE] [ERROR] GET /api/toggles - Error fetching toggles:', error);
         res.status(500).json({
             success: false,
             error: 'Failed to fetch toggles',
@@ -125,18 +130,20 @@ router.get('/', async (req: Request, res: Response) => {
 // GET /api/toggles/categories - Get unique categories
 // =============================================================================
 router.get('/categories', async (_req: Request, res: Response) => {
+    console.log('[ROUTE] GET /api/toggles/categories - Fetching categories');
     try {
         const toggles = await getDb().getAllToggles();
         const categories = [...new Set(toggles.map(t => t.category))];
         const categoryTypes = [...new Set(toggles.map(t => t.category_type))];
 
+        console.log('[ROUTE] GET /api/toggles/categories - Returning categories', { categories, categoryTypes });
         res.json({
             success: true,
             data: { categories, categoryTypes },
             timestamp: new Date().toISOString(),
         } as ApiResponse);
     } catch (error) {
-        console.error('Error fetching categories:', error);
+        console.error('[ROUTE] [ERROR] GET /api/toggles/categories - Error:', error);
         res.status(500).json({
             success: false,
             error: 'Failed to fetch categories',
@@ -149,10 +156,12 @@ router.get('/categories', async (_req: Request, res: Response) => {
 // GET /api/toggles/audit - Get recent audit log
 // =============================================================================
 router.get('/audit', async (req: Request, res: Response) => {
+    console.log('[ROUTE] GET /api/toggles/audit - Fetching audit log', { limit: req.query.limit });
     try {
         const config = getConfig();
         const limit = parseInt(req.query.limit as string) || config.apiLimits.defaultAuditLimit;
         const auditLog = await getDb().getRecentAuditLog(Math.min(limit, config.apiLimits.maxAuditLimit));
+        console.log(`[ROUTE] GET /api/toggles/audit - Returning ${auditLog.length} audit entries`);
 
         res.json({
             success: true,
@@ -160,7 +169,7 @@ router.get('/audit', async (req: Request, res: Response) => {
             timestamp: new Date().toISOString(),
         } as ApiResponse<AuditEntry[]>);
     } catch (error) {
-        console.error('Error fetching audit log:', error);
+        console.error('[ROUTE] [ERROR] GET /api/toggles/audit - Error:', error);
         res.status(500).json({
             success: false,
             error: 'Failed to fetch audit log',
@@ -173,10 +182,12 @@ router.get('/audit', async (req: Request, res: Response) => {
 // GET /api/toggles/auth-bypass/user - Get demo user for auth bypass
 // =============================================================================
 router.get('/auth-bypass/user', async (_req: Request, res: Response) => {
+    console.log('[ROUTE] GET /api/toggles/auth-bypass/user - Fetching demo user');
     try {
         const demoUser = await getDb().getDemoUser('authBypass');
 
         if (!demoUser) {
+            console.log('[ROUTE] GET /api/toggles/auth-bypass/user - No demo user found or auth bypass disabled');
             return res.status(404).json({
                 success: false,
                 error: 'Auth bypass is disabled or demo user not configured',
@@ -184,13 +195,14 @@ router.get('/auth-bypass/user', async (_req: Request, res: Response) => {
             } as ApiResponse);
         }
 
+        console.log('[ROUTE] GET /api/toggles/auth-bypass/user - Demo user found and returned');
         res.json({
             success: true,
             data: demoUser,
             timestamp: new Date().toISOString(),
         } as ApiResponse);
     } catch (error) {
-        console.error('Error fetching demo user:', error);
+        console.error('[ROUTE] [ERROR] GET /api/toggles/auth-bypass/user - Error:', error);
         res.status(500).json({
             success: false,
             error: 'Failed to get demo user',
@@ -203,12 +215,15 @@ router.get('/auth-bypass/user', async (_req: Request, res: Response) => {
 // GET /api/toggles/:name - Get a specific toggle
 // =============================================================================
 router.get('/:name', async (req: Request, res: Response) => {
+    const { name } = req.params;
+    console.log(`[ROUTE] GET /api/toggles/${name} - Fetching single toggle`);
     try {
-        const { name } = req.params;
 
         // Try cache first
+        console.log(`[ROUTE] GET /api/toggles/${name} - Checking cache`);
         const cached = await cache.getToggle(name);
         if (cached) {
+            console.log(`[ROUTE] GET /api/toggles/${name} - Cache hit`);
             return res.json({
                 success: true,
                 data: toApiFormat(cached),
@@ -218,6 +233,7 @@ router.get('/:name', async (req: Request, res: Response) => {
         }
 
         // Fetch from database
+        console.log(`[ROUTE] GET /api/toggles/${name} - Fetching from database`);
         const toggle = await getDb().getToggle(name);
 
         if (!toggle) {
@@ -231,6 +247,7 @@ router.get('/:name', async (req: Request, res: Response) => {
         // Cache the result
         await cache.setToggle(name, toggle);
 
+        console.log(`[ROUTE] GET /api/toggles/${name} - Toggle found and returned`);
         res.json({
             success: true,
             data: toApiFormat(toggle),
@@ -238,7 +255,7 @@ router.get('/:name', async (req: Request, res: Response) => {
             timestamp: new Date().toISOString(),
         } as ApiResponse);
     } catch (error) {
-        console.error('Error fetching toggle:', error);
+        console.error(`[ROUTE] [ERROR] GET /api/toggles/${name} - Error:`, error);
         res.status(500).json({
             success: false,
             error: 'Failed to fetch toggle',
@@ -287,6 +304,7 @@ router.get('/:name/history', async (req: Request, res: Response) => {
 // POST /api/toggles - Create a new toggle
 // =============================================================================
 router.post('/', async (req: Request, res: Response) => {
+    console.log('[ROUTE] POST /api/toggles - Creating new toggle', { name: req.body.name, category: req.body.category });
     try {
         // Validate input
         const validation = validateCreateToggle(req.body);
@@ -304,6 +322,7 @@ router.post('/', async (req: Request, res: Response) => {
         // Check if toggle already exists
         const existing = await getDb().getToggle(name);
         if (existing) {
+            console.log(`[ROUTE] POST /api/toggles - Toggle '${name}' already exists`);
             return res.status(409).json({
                 success: false,
                 error: `Toggle '${name}' already exists`,
@@ -320,7 +339,7 @@ router.post('/', async (req: Request, res: Response) => {
         // Invalidate cache
         await cache.invalidateAll();
 
-        console.log(`🎛️  Toggle '${name}' created by ${getClientIdentifier(req)}`);
+        console.log(`[ROUTE] POST /api/toggles - 🎛️ Toggle '${name}' created by ${getClientIdentifier(req)}`);
 
         res.status(201).json({
             success: true,
@@ -328,7 +347,7 @@ router.post('/', async (req: Request, res: Response) => {
             timestamp: new Date().toISOString(),
         } as ApiResponse);
     } catch (error) {
-        console.error('Error creating toggle:', error);
+        console.error('[ROUTE] [ERROR] POST /api/toggles - Error creating toggle:', error);
         res.status(500).json({
             success: false,
             error: error instanceof Error ? error.message : 'Failed to create toggle',
@@ -341,6 +360,7 @@ router.post('/', async (req: Request, res: Response) => {
 // POST /api/toggles/bulk - Bulk update toggles
 // =============================================================================
 router.post('/bulk', async (req: Request, res: Response) => {
+    console.log('[ROUTE] POST /api/toggles/bulk - Bulk update request', { count: req.body.toggles?.length });
     try {
         // Validate input
         const validation = validateBulkUpdate(req.body);
@@ -361,7 +381,7 @@ router.post('/bulk', async (req: Request, res: Response) => {
         // Invalidate cache
         await cache.invalidateAll();
 
-        console.log(`🎛️  Bulk update: ${results.length} toggles updated by ${clientId}`);
+        console.log(`[ROUTE] POST /api/toggles/bulk - 🎛️ Bulk update: ${results.length} toggles updated by ${clientId}`);
 
         res.json({
             success: true,
@@ -372,7 +392,7 @@ router.post('/bulk', async (req: Request, res: Response) => {
             timestamp: new Date().toISOString(),
         } as ApiResponse);
     } catch (error) {
-        console.error('Error bulk updating toggles:', error);
+        console.error('[ROUTE] [ERROR] POST /api/toggles/bulk - Error:', error);
         res.status(500).json({
             success: false,
             error: error instanceof Error ? error.message : 'Failed to bulk update toggles',
@@ -385,8 +405,9 @@ router.post('/bulk', async (req: Request, res: Response) => {
 // PATCH /api/toggles/:name - Update toggle enabled state
 // =============================================================================
 router.patch('/:name', async (req: Request, res: Response) => {
+    const { name } = req.params;
+    console.log(`[ROUTE] PATCH /api/toggles/${name} - Updating toggle`, { enabled: req.body.enabled });
     try {
-        const { name } = req.params;
 
         // Validate input
         const validation = validateUpdateToggle(req.body);
@@ -415,7 +436,7 @@ router.patch('/:name', async (req: Request, res: Response) => {
         // Invalidate cache
         await cache.invalidateToggle(name);
 
-        console.log(`🎛️  Toggle '${name}' set to ${enabled ? 'ENABLED' : 'DISABLED'} by ${clientId}`);
+        console.log(`[ROUTE] PATCH /api/toggles/${name} - 🎛️ Toggle set to ${enabled ? 'ENABLED' : 'DISABLED'} by ${clientId}`);
 
         res.json({
             success: true,
@@ -423,7 +444,7 @@ router.patch('/:name', async (req: Request, res: Response) => {
             timestamp: new Date().toISOString(),
         } as ApiResponse);
     } catch (error) {
-        console.error('Error updating toggle:', error);
+        console.error(`[ROUTE] [ERROR] PATCH /api/toggles/${name} - Error:`, error);
         res.status(500).json({
             success: false,
             error: error instanceof Error ? error.message : 'Failed to update toggle',
@@ -436,8 +457,9 @@ router.patch('/:name', async (req: Request, res: Response) => {
 // PATCH /api/toggles/:name/metadata - Update toggle metadata
 // =============================================================================
 router.patch('/:name/metadata', async (req: Request, res: Response) => {
+    const { name } = req.params;
+    console.log(`[ROUTE] PATCH /api/toggles/${name}/metadata - Updating metadata`);
     try {
-        const { name } = req.params;
 
         // Validate input
         const validation = validateMetadataUpdate(req.body);
@@ -466,7 +488,7 @@ router.patch('/:name/metadata', async (req: Request, res: Response) => {
         // Invalidate cache
         await cache.invalidateToggle(name);
 
-        console.log(`🎛️  Toggle '${name}' metadata updated by ${clientId}`);
+        console.log(`[ROUTE] PATCH /api/toggles/${name}/metadata - 🎛️ Metadata updated by ${clientId}`);
 
         res.json({
             success: true,
@@ -474,7 +496,7 @@ router.patch('/:name/metadata', async (req: Request, res: Response) => {
             timestamp: new Date().toISOString(),
         } as ApiResponse);
     } catch (error) {
-        console.error('Error updating toggle metadata:', error);
+        console.error(`[ROUTE] [ERROR] PATCH /api/toggles/${name}/metadata - Error:`, error);
         res.status(500).json({
             success: false,
             error: 'Failed to update toggle metadata',
@@ -487,8 +509,9 @@ router.patch('/:name/metadata', async (req: Request, res: Response) => {
 // DELETE /api/toggles/:name - Delete a toggle
 // =============================================================================
 router.delete('/:name', async (req: Request, res: Response) => {
+    const { name } = req.params;
+    console.log(`[ROUTE] DELETE /api/toggles/${name} - Deleting toggle`);
     try {
-        const { name } = req.params;
         const clientId = getClientIdentifier(req);
 
         const deleted = await getDb().deleteToggle(name, clientId);
@@ -504,7 +527,7 @@ router.delete('/:name', async (req: Request, res: Response) => {
         // Invalidate cache
         await cache.invalidateToggle(name);
 
-        console.log(`🎛️  Toggle '${name}' deleted by ${clientId}`);
+        console.log(`[ROUTE] DELETE /api/toggles/${name} - 🎛️ Toggle deleted by ${clientId}`);
 
         res.json({
             success: true,
@@ -512,7 +535,7 @@ router.delete('/:name', async (req: Request, res: Response) => {
             timestamp: new Date().toISOString(),
         } as ApiResponse);
     } catch (error) {
-        console.error('Error deleting toggle:', error);
+        console.error(`[ROUTE] [ERROR] DELETE /api/toggles/${name} - Error:`, error);
         res.status(500).json({
             success: false,
             error: 'Failed to delete toggle',

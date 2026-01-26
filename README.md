@@ -59,17 +59,64 @@ if (response.ok) {
 feature-context-toggle/
 ├── backend/          # Express + TypeScript API
 │   └── src/
-│       ├── index.ts
-│       ├── routes/toggles.ts
+│       ├── index.ts       # Server entry point with extensive logging
+│       ├── database.ts    # PostgreSQL connection (NeonDB or container)
+│       ├── cache.ts       # Redis caching layer
+│       ├── config.ts      # Environment configuration
+│       ├── routes/
+│       │   └── toggles-db.ts  # Toggle API routes
 │       └── types/index.ts
 ├── frontend/         # Vite + React dashboard
 │   └── src/
-│       ├── App.tsx
+│       ├── App.tsx        # Main dashboard with logging
 │       ├── main.tsx
 │       └── index.css
-├── toggles.json      # Toggle state storage
+├── database/
+│   └── schema.sql    # PostgreSQL schema
 └── package.json      # Monorepo root
 ```
+
+## Logging
+
+The backend includes extensive structured logging for debugging and monitoring:
+
+```
+[STARTUP] Feature Context Toggle Service Starting...
+[DATABASE] 📦 Database: NeonDB @ host:5432
+[CACHE] ✅ Redis cache connected
+[REQUEST] [req_xxx] GET /api/toggles started
+[ROUTE] GET /api/toggles - Fetching all toggles
+[DATABASE] [QUERY] getAllToggles returned 21 toggles
+[CACHE] [SET-ALL] 21 toggles cached successfully
+[RESPONSE] [req_xxx] [SUCCESS] GET /api/toggles 200 524ms
+```
+
+Log prefixes:
+- `[STARTUP]` - Service initialization
+- `[DATABASE]` - PostgreSQL operations
+- `[CACHE]` - Redis cache operations
+- `[REQUEST]` / `[RESPONSE]` - HTTP request lifecycle
+- `[ROUTE]` - API route handling
+- `[HEALTH]` - Health check operations
+
+## Database Configuration
+
+The service supports two database modes via `USE_CONTAINER_DB` environment variable:
+
+| Mode | Description |
+|------|-------------|
+| `USE_CONTAINER_DB=false` | Use NeonDB (cloud PostgreSQL) - **default** |
+| `USE_CONTAINER_DB=true` | Use local PostgreSQL container |
+
+## Environment Variables
+
+| Variable | Description | Default |
+|----------|-------------|---------|
+| `PORT` | Backend server port | `3099` |
+| `USE_CONTAINER_DB` | Use container or NeonDB | `false` |
+| `REDIS_URL` | Redis connection URL | Required |
+| `NEON_DB_HOST` | NeonDB host (if cloud) | Required |
+| `DB_HOST` | Container DB host | `localhost` |
 
 ## License
 

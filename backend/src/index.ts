@@ -15,7 +15,9 @@ import toggleRoutes from './routes/toggles-db.js';
 import type { HealthResponse } from './types/index.js';
 
 // Load configuration first (validates required env vars)
+console.log('[STARTUP] Loading configuration...');
 const appConfig = loadConfig();
+console.log('[STARTUP] Configuration loaded successfully', { port: appConfig.port, nodeEnv: appConfig.nodeEnv });
 
 const app = express();
 const PORT = appConfig.port;
@@ -47,10 +49,16 @@ app.use(express.json());
 // =============================================================================
 app.use((req, res, next) => {
     const start = Date.now();
+    const requestId = `req_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
+    console.log(`[REQUEST] [${requestId}] ${req.method} ${req.path} started`, {
+        query: req.query,
+        headers: { 'content-type': req.headers['content-type'], 'x-service-name': req.headers['x-service-name'] },
+        ip: req.ip,
+    });
     res.on('finish', () => {
         const duration = Date.now() - start;
-        const level = res.statusCode >= 400 ? '⚠️' : '✓';
-        console.log(`${level} ${req.method} ${req.path} ${res.statusCode} ${duration}ms`);
+        const level = res.statusCode >= 400 ? 'ERROR' : 'SUCCESS';
+        console.log(`[RESPONSE] [${requestId}] [${level}] ${req.method} ${req.path} ${res.statusCode} ${duration}ms`);
     });
     next();
 });
@@ -59,8 +67,10 @@ app.use((req, res, next) => {
 // Health Check
 // =============================================================================
 app.get('/health', async (_req, res) => {
+    console.log('[HEALTH] Health check requested');
     const dbHealth = await getDb().healthCheck();
     const cacheHealth = await cache.healthCheck();
+    console.log('[HEALTH] Health check results', { dbHealth, cacheHealth });
 
     const isHealthy = dbHealth.healthy;
     const status = isHealthy ? 'healthy' : (cacheHealth.healthy ? 'degraded' : 'unhealthy');
@@ -76,6 +86,7 @@ app.get('/health', async (_req, res) => {
         },
     };
 
+    console.log(`[HEALTH] Responding with status: ${status}`);
     res.status(isHealthy ? 200 : 503).json(response);
 });
 
@@ -112,6 +123,12 @@ app.use((err: Error, _req: express.Request, res: express.Response, _next: expres
 // Startup
 // =============================================================================
 async function start() {
+    console.log('[STARTUP] ==================================================');
+    console.log('[STARTUP] Feature Context Toggle Service Starting...');
+    console.log('[STARTUP] ==================================================');
+    console.log('[STARTUP] Timestamp:', new Date().toISOString());
+    console.log('[STARTUP] Node version:', process.version);
+    console.log('[STARTUP] Environment:', appConfig.nodeEnv);
     console.log('');
     console.log('╔══════════════════════════════════════════════════════════╗');
     console.log('║     🎛️  Feature Context Toggle - Starting...             ║');
@@ -119,15 +136,21 @@ async function start() {
     console.log('');
 
     // Initialize database
+    console.log('[STARTUP] Initializing database connection...');
     const dbReady = await getDb().initialize();
     if (!dbReady) {
-        console.warn('⚠️  Database initialization failed, running in degraded mode');
+        console.warn('[STARTUP] ⚠️  Database initialization failed, running in degraded mode');
+    } else {
+        console.log('[STARTUP] ✅ Database initialized successfully');
     }
 
     // Initialize cache
+    console.log('[STARTUP] Initializing Redis cache connection...');
     const cacheReady = await cache.initialize();
     if (!cacheReady) {
-        console.warn('⚠️  Cache not available, running without caching');
+        console.warn('[STARTUP] ⚠️  Cache not available, running without caching');
+    } else {
+        console.log('[STARTUP] ✅ Redis cache initialized successfully');
     }
 
     // Start server
@@ -149,14 +172,16 @@ async function start() {
 
 // Graceful shutdown
 process.on('SIGTERM', async () => {
-    console.log('Received SIGTERM, shutting down gracefully...');
+    console.log('[SHUTDOWN] Received SIGTERM, shutting down gracefully...');
+    console.log('[SHUTDOWN] Timestamp:', new Date().toISOString());
     await cache.close();
     await getDb().close();
     process.exit(0);
 });
 
 process.on('SIGINT', async () => {
-    console.log('Received SIGINT, shutting down gracefully...');
+    console.log('[SHUTDOWN] Received SIGINT, shutting down gracefully...');
+    console.log('[SHUTDOWN] Timestamp:', new Date().toISOString());
     await cache.close();
     await getDb().close();
     process.exit(0);
