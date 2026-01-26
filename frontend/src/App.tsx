@@ -49,6 +49,8 @@ interface ApiResponse<T> {
 const API_BASE = import.meta.env.VITE_API_BASE_URL || '/api/toggles';
 const POLL_INTERVAL = parseInt(import.meta.env.VITE_POLL_INTERVAL || '10000');
 
+console.log('[FRONTEND] App initializing...', { API_BASE, POLL_INTERVAL });
+
 const categoryIcons: Record<string, string> = {
     authentication: '🔐',
     data: '💾',
@@ -341,6 +343,8 @@ function AuditLog({ entries }: { entries: AuditEntry[] }) {
  * Main App Component
  */
 function App() {
+    console.log('[FRONTEND] App component mounting...');
+    
     const [toggles, setToggles] = useState<ToggleState | null>(null);
     const [auditLog, setAuditLog] = useState<AuditEntry[]>([]);
     const [loading, setLoading] = useState(true);
@@ -356,17 +360,23 @@ function App() {
      * Fetch all toggles from API
      */
     const fetchToggles = useCallback(async () => {
+        console.log('[FRONTEND] Fetching toggles from:', API_BASE);
         try {
             setError(null);
             const response = await fetch(API_BASE);
+            console.log('[FRONTEND] Response status:', response.status);
+            
             const data: ApiResponse<ToggleState> = await response.json();
+            console.log('[FRONTEND] Response data:', data);
 
             if (data.success && data.data) {
+                console.log('[FRONTEND] Toggles loaded:', Object.keys(data.data).length);
                 setToggles(data.data);
             } else {
                 throw new Error(data.error || 'Failed to fetch toggles');
             }
         } catch (err) {
+            console.error('[FRONTEND] Error fetching toggles:', err);
             setError(err instanceof Error ? err.message : 'Unknown error');
         } finally {
             setLoading(false);
@@ -479,14 +489,20 @@ function App() {
 
     // Initial fetch and polling
     useEffect(() => {
+        console.log('[FRONTEND] useEffect triggered - initial data load');
         fetchToggles();
         fetchAuditLog();
 
+        console.log('[FRONTEND] Setting up polling interval:', POLL_INTERVAL, 'ms');
         const interval = setInterval(() => {
+            console.log('[FRONTEND] Polling for updates...');
             fetchToggles();
         }, POLL_INTERVAL);
 
-        return () => clearInterval(interval);
+        return () => {
+            console.log('[FRONTEND] Cleaning up polling interval');
+            clearInterval(interval);
+        };
     }, [fetchToggles, fetchAuditLog]);
 
     // Get unique categories for filter
@@ -527,6 +543,13 @@ function App() {
         ? Object.values(toggles).filter(t => t.enabled).length
         : 0;
 
+    console.log('[FRONTEND] Rendering App, state:', { 
+        loading, 
+        error, 
+        togglesCount: toggles ? Object.keys(toggles).length : 0,
+        enabledCount
+    });
+    
     return (
         <div className="app">
             <header className="header">

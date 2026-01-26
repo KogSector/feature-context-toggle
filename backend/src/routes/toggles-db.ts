@@ -265,6 +265,31 @@ router.get('/:name', async (req: Request, res: Response) => {
 });
 
 // =============================================================================
+// POST /api/logs - Accept frontend logs
+// =============================================================================
+router.post('/logs', async (req: Request, res: Response) => {
+    console.log('[ROUTE] POST /api/logs - Received frontend log', { 
+        logCount: Array.isArray(req.body) ? req.body.length : 1 
+    });
+    
+    try {
+        // Just acknowledge receipt - we could store logs if needed
+        res.json({
+            success: true,
+            message: 'Logs received',
+            timestamp: new Date().toISOString(),
+        });
+    } catch (error) {
+        console.error('[ROUTE] [ERROR] POST /api/logs - Error:', error);
+        res.status(500).json({
+            success: false,
+            error: 'Failed to process logs',
+            timestamp: new Date().toISOString(),
+        });
+    }
+});
+
+// =============================================================================
 // GET /api/toggles/:name/history - Get toggle audit history
 // =============================================================================
 router.get('/:name/history', async (req: Request, res: Response) => {
