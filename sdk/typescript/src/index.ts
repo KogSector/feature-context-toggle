@@ -7,10 +7,14 @@
  * ```typescript
  * import { initToggleClient, isToggleEnabled, requireToggle } from '@confuse/feature-toggle-sdk';
  * 
- * // Initialize once at app startup
+ * // Initialize once at app startup (requires FEATURE_TOGGLE_SERVICE_URL env var)
+ * if (!process.env.FEATURE_TOGGLE_SERVICE_URL) {
+ *   throw new Error('FEATURE_TOGGLE_SERVICE_URL environment variable is required');
+ * }
+ * 
  * initToggleClient({
- *   serviceUrl: process.env.FEATURE_TOGGLE_SERVICE_URL || 'http://localhost:3099',
- *   serviceName: 'my-service',
+ *   serviceUrl: process.env.FEATURE_TOGGLE_SERVICE_URL,
+ *   serviceName: process.env.SERVICE_NAME || 'my-service',
  * });
  * 
  * // Check toggle

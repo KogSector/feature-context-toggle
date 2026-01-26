@@ -97,6 +97,9 @@ export class DatabaseManager {
       throw new Error(`Invalid schema name: ${this.config.schema}. Allowed: ${ALLOWED_SCHEMAS.join(', ')}`);
     }
 
+    // Configure SSL for NeonDB or other cloud databases
+    const sslConfig = appConfig.db.ssl ? { rejectUnauthorized: false } : false;
+
     this.pool = new Pool({
       host: this.config.host,
       port: this.config.port,
@@ -105,8 +108,11 @@ export class DatabaseManager {
       password: this.config.password,
       max: 20,
       idleTimeoutMillis: 30000,
-      connectionTimeoutMillis: 5000,
+      connectionTimeoutMillis: 10000,
+      ssl: sslConfig,
     });
+
+    console.log(`📦 Database: ${appConfig.db.useContainer ? 'Container PostgreSQL' : 'NeonDB'} @ ${this.config.host}`);
 
     // Set default schema on connection (safe - validated above)
     this.pool.on('connect', (client) => {
@@ -583,5 +589,24 @@ export class DatabaseManager {
   }
 }
 
-// Export singleton instance
-export const db = new DatabaseManager();
+// Lazy singleton instance
+let _db: DatabaseManager | null = null;
+
+/**
+ * Get the database manager singleton (lazy initialization)
+ */
+export function getDb(): DatabaseManager {
+    if (!_db) {
+        _db = new DatabaseManager();
+    }
+    return _db;
+}
+
+// Export for backward compatibility (use getDb() for lazy init)
+export const db = {
+    get instance(): DatabaseManager {
+        return getDb();
+    },
+    initialize: async () => getDb().initialize(),
+    close: async () => _db?.close(),
+};

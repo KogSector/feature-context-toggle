@@ -44,10 +44,10 @@ interface ApiResponse<T> {
 }
 
 /**
- * Constants
+ * Constants - loaded from environment variables
  */
-const API_BASE = '/api/toggles';
-const POLL_INTERVAL = 10000; // 10 seconds
+const API_BASE = import.meta.env.VITE_API_BASE_URL || '/api/toggles';
+const POLL_INTERVAL = parseInt(import.meta.env.VITE_POLL_INTERVAL || '10000');
 
 const categoryIcons: Record<string, string> = {
     authentication: '🔐',

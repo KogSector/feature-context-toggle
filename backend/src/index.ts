@@ -9,7 +9,7 @@ import express from 'express';
 import cors from 'cors';
 import helmet from 'helmet';
 import { loadConfig, getConfig } from './config.js';
-import { db } from './database.js';
+import { getDb } from './database.js';
 import { cache } from './cache.js';
 import toggleRoutes from './routes/toggles-db.js';
 import type { HealthResponse } from './types/index.js';
@@ -59,7 +59,7 @@ app.use((req, res, next) => {
 // Health Check
 // =============================================================================
 app.get('/health', async (_req, res) => {
-    const dbHealth = await db.healthCheck();
+    const dbHealth = await getDb().healthCheck();
     const cacheHealth = await cache.healthCheck();
 
     const isHealthy = dbHealth.healthy;
@@ -119,7 +119,7 @@ async function start() {
     console.log('');
 
     // Initialize database
-    const dbReady = await db.initialize();
+    const dbReady = await getDb().initialize();
     if (!dbReady) {
         console.warn('⚠️  Database initialization failed, running in degraded mode');
     }
@@ -151,14 +151,14 @@ async function start() {
 process.on('SIGTERM', async () => {
     console.log('Received SIGTERM, shutting down gracefully...');
     await cache.close();
-    await db.close();
+    await getDb().close();
     process.exit(0);
 });
 
 process.on('SIGINT', async () => {
     console.log('Received SIGINT, shutting down gracefully...');
     await cache.close();
-    await db.close();
+    await getDb().close();
     process.exit(0);
 });
 

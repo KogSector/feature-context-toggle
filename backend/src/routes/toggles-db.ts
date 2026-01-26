@@ -5,7 +5,7 @@
  */
 
 import { Router, Request, Response } from 'express';
-import { db, Toggle } from '../database.js';
+import { getDb, Toggle } from '../database.js';
 import { cache } from '../cache.js';
 import { getConfig } from '../config.js';
 import {
@@ -91,7 +91,7 @@ router.get('/', async (req: Request, res: Response) => {
         }
 
         // Fetch from database
-        const toggles = await db.getAllToggles(
+        const toggles = await getDb().getAllToggles(
             category as string | undefined,
             categoryType as string | undefined
         );
@@ -126,7 +126,7 @@ router.get('/', async (req: Request, res: Response) => {
 // =============================================================================
 router.get('/categories', async (_req: Request, res: Response) => {
     try {
-        const toggles = await db.getAllToggles();
+        const toggles = await getDb().getAllToggles();
         const categories = [...new Set(toggles.map(t => t.category))];
         const categoryTypes = [...new Set(toggles.map(t => t.category_type))];
 
@@ -152,7 +152,7 @@ router.get('/audit', async (req: Request, res: Response) => {
     try {
         const config = getConfig();
         const limit = parseInt(req.query.limit as string) || config.apiLimits.defaultAuditLimit;
-        const auditLog = await db.getRecentAuditLog(Math.min(limit, config.apiLimits.maxAuditLimit));
+        const auditLog = await getDb().getRecentAuditLog(Math.min(limit, config.apiLimits.maxAuditLimit));
 
         res.json({
             success: true,
@@ -174,7 +174,7 @@ router.get('/audit', async (req: Request, res: Response) => {
 // =============================================================================
 router.get('/auth-bypass/user', async (_req: Request, res: Response) => {
     try {
-        const demoUser = await db.getDemoUser('authBypass');
+        const demoUser = await getDb().getDemoUser('authBypass');
 
         if (!demoUser) {
             return res.status(404).json({
@@ -218,7 +218,7 @@ router.get('/:name', async (req: Request, res: Response) => {
         }
 
         // Fetch from database
-        const toggle = await db.getToggle(name);
+        const toggle = await getDb().getToggle(name);
 
         if (!toggle) {
             return res.status(404).json({
@@ -257,7 +257,7 @@ router.get('/:name/history', async (req: Request, res: Response) => {
         const limit = parseInt(req.query.limit as string) || config.apiLimits.defaultHistoryLimit;
 
         // Verify toggle exists
-        const toggle = await db.getToggle(name);
+        const toggle = await getDb().getToggle(name);
         if (!toggle) {
             return res.status(404).json({
                 success: false,
@@ -266,7 +266,7 @@ router.get('/:name/history', async (req: Request, res: Response) => {
             } as ApiResponse);
         }
 
-        const history = await db.getToggleHistory(name, Math.min(limit, config.apiLimits.maxHistoryLimit));
+        const history = await getDb().getToggleHistory(name, Math.min(limit, config.apiLimits.maxHistoryLimit));
 
         res.json({
             success: true,
@@ -302,7 +302,7 @@ router.post('/', async (req: Request, res: Response) => {
         const { name, enabled, description, category, categoryType, metadata } = req.body;
 
         // Check if toggle already exists
-        const existing = await db.getToggle(name);
+        const existing = await getDb().getToggle(name);
         if (existing) {
             return res.status(409).json({
                 success: false,
@@ -312,7 +312,7 @@ router.post('/', async (req: Request, res: Response) => {
         }
 
         // Create toggle
-        const toggle = await db.createToggle(
+        const toggle = await getDb().createToggle(
             { name, enabled, description, category, categoryType, metadata },
             getClientIdentifier(req)
         );
@@ -356,7 +356,7 @@ router.post('/bulk', async (req: Request, res: Response) => {
         const { toggles } = req.body;
         const clientId = getClientIdentifier(req);
 
-        const results = await db.bulkUpdateToggles(toggles, clientId);
+        const results = await getDb().bulkUpdateToggles(toggles, clientId);
 
         // Invalidate cache
         await cache.invalidateAll();
@@ -402,7 +402,7 @@ router.patch('/:name', async (req: Request, res: Response) => {
         const { enabled } = req.body;
         const clientId = getClientIdentifier(req);
 
-        const toggle = await db.updateToggle(name, enabled, clientId);
+        const toggle = await getDb().updateToggle(name, enabled, clientId);
 
         if (!toggle) {
             return res.status(404).json({
@@ -453,7 +453,7 @@ router.patch('/:name/metadata', async (req: Request, res: Response) => {
         const { metadata } = req.body;
         const clientId = getClientIdentifier(req);
 
-        const toggle = await db.updateToggleMetadata(name, metadata, clientId);
+        const toggle = await getDb().updateToggleMetadata(name, metadata, clientId);
 
         if (!toggle) {
             return res.status(404).json({
@@ -491,7 +491,7 @@ router.delete('/:name', async (req: Request, res: Response) => {
         const { name } = req.params;
         const clientId = getClientIdentifier(req);
 
-        const deleted = await db.deleteToggle(name, clientId);
+        const deleted = await getDb().deleteToggle(name, clientId);
 
         if (!deleted) {
             return res.status(404).json({
