@@ -4,15 +4,15 @@
     "description": "Bypass authentication and use a demo user for development/testing",
     "category": "authentication",
     "demoUser": {
-      "id": "demo-user-001",
-      "email": "demo@confuse.dev",
-      "name": "Demo Developer",
+      "id": "user-rishabh-001",
+      "email": "rishabh.babi@gmail.com",
+      "name": "Rishabh Babi",
       "roles": [
         "user",
         "developer",
         "admin"
       ],
-      "sessionId": "demo-session-001"
+      "sessionId": "session-rishabh-001"
     }
   },
   "debugLogging": {

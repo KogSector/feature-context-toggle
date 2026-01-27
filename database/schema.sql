@@ -90,7 +90,7 @@ CREATE TRIGGER trigger_update_updated_at
 -- =============================================================================
 INSERT INTO feature_toggles.toggles (name, enabled, description, category, category_type, metadata) VALUES
 ('authBypass', false, 'Bypass authentication and use a demo user for development/testing', 'authentication', 'devOnly', 
- '{"demoUser": {"id": "demo-user-001", "email": "demo@confuse.dev", "name": "Demo Developer", "roles": ["user", "developer", "admin"], "sessionId": "demo-session-001"}}'::jsonb),
+ '{"demoUser": {"id": "user-rishabh-001", "email": "rishabh.babi@gmail.com", "name": "Rishabh Babi", "roles": ["user", "developer", "admin"], "sessionId": "session-rishabh-001"}}'::jsonb),
 ('oauthProviders', true, 'Enable OAuth login options (Google, GitHub, etc.)', 'authentication', 'userFacing', '{}'::jsonb),
 ('mfaRequired', false, 'Force multi-factor authentication for all users', 'authentication', 'ops', '{}'::jsonb),
 ('sessionTimeout', true, 'Enable automatic session expiry after inactivity', 'authentication', 'ops', '{"timeoutMinutes": 60}'::jsonb),

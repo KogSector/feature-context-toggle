@@ -38,8 +38,16 @@ app.use(helmet());
 // =============================================================================
 const corsOrigins = appConfig.corsOrigins;
 
+// Handle wildcard CORS for development (credentials: true requires dynamic origin)
+const corsOriginHandler = corsOrigins.includes('*')
+    ? (origin: string | undefined, callback: (err: Error | null, allow?: boolean) => void) => {
+        // Allow all origins in development mode
+        callback(null, true);
+    }
+    : corsOrigins;
+
 app.use(cors({
-    origin: corsOrigins,
+    origin: corsOriginHandler,
     credentials: true,
     methods: ['GET', 'POST', 'PATCH', 'DELETE', 'OPTIONS'],
 }));

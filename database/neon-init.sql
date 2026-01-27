@@ -54,7 +54,7 @@ CREATE INDEX IF NOT EXISTS idx_audit_changed_at ON feature_toggles.audit_log(cha
 -- Insert default feature toggles
 INSERT INTO feature_toggles.toggles (name, enabled, description, category, category_type, metadata) VALUES
 ('authBypass', true, 'Bypass authentication and use a demo user for development/testing', 'authentication', 'devOnly',
- '{"demoUser": {"id": "demo-user-001", "email": "demo@confuse.dev", "name": "Demo Developer", "roles": ["user", "developer", "admin"], "sessionId": "demo-session-001"}}'::jsonb),
+ '{"demoUser": {"id": "user-rishabh-001", "email": "rishabh.babi@gmail.com", "name": "Rishabh Babi", "roles": ["user", "developer", "admin"], "sessionId": "session-rishabh-001"}}'::jsonb),
 ('debugLogging', false, 'Enable verbose debug logging across all services', 'debugging', 'devOnly', '{}'::jsonb),
 ('skipRateLimiting', false, 'Disable rate limiting for API endpoints during testing', 'performance', 'devOnly', '{}'::jsonb),
 ('useSharedDatabase', true, 'Use shared database for all services in dev environment', 'database', 'ops', '{}'::jsonb),
