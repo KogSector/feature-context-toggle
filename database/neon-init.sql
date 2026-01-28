@@ -63,13 +63,24 @@ INSERT INTO feature_toggles.toggles (name, enabled, description, category, categ
 -- New toggles for platform transformation
 ('useUnifiedProcessor', true, 'Route processing through unified-processor (CocoIndex) service', 'processing', 'ops',
  '{"description": "When enabled, uses the new unified-processor for all document and code processing"}'::jsonb),
-('useSourcePreProcessor', true, 'Offload heavy processing to source-pre-processor service', 'processing', 'ops',
- '{"description": "When enabled, routes Docling and Tree-sitter tasks to the dedicated pre-processor service"}'::jsonb),
 ('useDoclingProcessing', true, 'Enable Docling for advanced document parsing (PDF, DOCX, HTML)', 'processing', 'userFacing',
  '{"description": "When enabled, uses Docling for superior document layout analysis"}'::jsonb),
 ('useTreeSitterAnalysis', true, 'Enable Tree-sitter for universal code analysis', 'processing', 'userFacing',
  '{"description": "When enabled, uses Tree-sitter for AST-based code understanding"}'::jsonb),
 ('useGraphitiGraph', true, 'Route graph operations through Graphiti-powered relation-graph', 'graph', 'ops',
- '{"description": "When enabled, uses the Graphiti temporal knowledge graph"}'::jsonb)
+ '{"description": "When enabled, uses the Graphiti temporal knowledge graph"}'::jsonb),
+-- Enterprise infrastructure toggles
+('useHybridSearch', true, 'Enable hybrid vector + graph search for enhanced results', 'search', 'userFacing',
+ '{"description": "Combines vector similarity and knowledge graph traversal for better search relevance"}'::jsonb),
+('useCircuitBreaker', true, 'Enable circuit breaker pattern for service resilience', 'reliability', 'ops',
+ '{"description": "Automatically fails fast when downstream services are unhealthy", "threshold": 5, "timeout": 30000}'::jsonb),
+('useKafkaEvents', false, 'Route async operations through Kafka message queue', 'messaging', 'ops',
+ '{"description": "When enabled, publishes processing events to Kafka topics for async handling"}'::jsonb),
+('enablePrometheusMetrics', true, 'Expose Prometheus metrics endpoints on all services', 'observability', 'ops',
+ '{"description": "When enabled, exposes /metrics endpoint for Prometheus scraping"}'::jsonb),
+('enableHealthChecks', true, 'Enable detailed health check endpoints', 'observability', 'ops',
+ '{"description": "Provides /health and /health/live endpoints for container orchestration"}'::jsonb),
+('enableRateLimiting', true, 'Enable API rate limiting in production', 'security', 'ops',
+ '{"description": "Rate limits API requests per user/IP to prevent abuse", "requestsPerMinute": 100}'::jsonb)
 ON CONFLICT (name) DO NOTHING;
 
