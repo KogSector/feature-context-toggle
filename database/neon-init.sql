@@ -59,5 +59,17 @@ INSERT INTO feature_toggles.toggles (name, enabled, description, category, categ
 ('skipRateLimiting', false, 'Disable rate limiting for API endpoints during testing', 'performance', 'devOnly', '{}'::jsonb),
 ('useSharedDatabase', true, 'Use shared database for all services in dev environment', 'database', 'ops', '{}'::jsonb),
 ('enableDistributedTracing', true, 'Enable OpenTelemetry distributed tracing', 'observability', 'ops', '{}'::jsonb),
-('advancedSearch', true, 'Enable advanced search features in the application', 'features', 'userFacing', '{}'::jsonb)
+('advancedSearch', true, 'Enable advanced search features in the application', 'features', 'userFacing', '{}'::jsonb),
+-- New toggles for platform transformation
+('useUnifiedProcessor', true, 'Route processing through unified-processor (CocoIndex) service', 'processing', 'ops',
+ '{"description": "When enabled, uses the new unified-processor for all document and code processing"}'::jsonb),
+('useSourcePreProcessor', true, 'Offload heavy processing to source-pre-processor service', 'processing', 'ops',
+ '{"description": "When enabled, routes Docling and Tree-sitter tasks to the dedicated pre-processor service"}'::jsonb),
+('useDoclingProcessing', true, 'Enable Docling for advanced document parsing (PDF, DOCX, HTML)', 'processing', 'userFacing',
+ '{"description": "When enabled, uses Docling for superior document layout analysis"}'::jsonb),
+('useTreeSitterAnalysis', true, 'Enable Tree-sitter for universal code analysis', 'processing', 'userFacing',
+ '{"description": "When enabled, uses Tree-sitter for AST-based code understanding"}'::jsonb),
+('useGraphitiGraph', true, 'Route graph operations through Graphiti-powered relation-graph', 'graph', 'ops',
+ '{"description": "When enabled, uses the Graphiti temporal knowledge graph"}'::jsonb)
 ON CONFLICT (name) DO NOTHING;
+
