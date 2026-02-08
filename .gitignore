@@ -1,26 +1,10 @@
-# Dependencies
+# Node Service .gitignore
 node_modules/
-
-# Build outputs
 dist/
 build/
-
-# Environment
+coverage/
 .env
-.env.local
-.env.*.local
-
-# IDE
-.vscode/
-.idea/
-
-# Logs
-*.log
-npm-debug.log*
-
-# OS
-.DS_Store
-Thumbs.db
-
-# TypeScript cache
-*.tsbuildinfo
+.env.*
+!.env.example
+npm-debug.log
+yarn-error.log

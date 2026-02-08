@@ -35,7 +35,7 @@ COPY tsconfig.json ./
 COPY database ./database
 
 # Copy backend directory
-COPY backend ./backend
+COPY shared-middleware ./shared-middleware
 
 # Install dependencies
 WORKDIR /app/backend
