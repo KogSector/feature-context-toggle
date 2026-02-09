@@ -5,7 +5,7 @@
  */
 
 import { Router, Request, Response } from 'express';
-import { getDb, Toggle } from '../database.js';
+import { getDb, Toggle } from '../db/client.js';
 import { cache } from '../cache.js';
 import { getConfig } from '../config.js';
 import {
@@ -268,10 +268,10 @@ router.get('/:name', async (req: Request, res: Response) => {
 // POST /api/logs - Accept frontend logs
 // =============================================================================
 router.post('/logs', async (req: Request, res: Response) => {
-    console.log('[ROUTE] POST /api/logs - Received frontend log', { 
-        logCount: Array.isArray(req.body) ? req.body.length : 1 
+    console.log('[ROUTE] POST /api/logs - Received frontend log', {
+        logCount: Array.isArray(req.body) ? req.body.length : 1
     });
-    
+
     try {
         // Just acknowledge receipt - we could store logs if needed
         res.json({

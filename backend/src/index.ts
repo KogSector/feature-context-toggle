@@ -11,7 +11,7 @@ import helmet from 'helmet';
 import path from 'path';
 import { fileURLToPath } from 'url';
 import { loadConfig, getConfig } from './config.js';
-import { getDb } from './database.js';
+import { getDb } from './db/client.js';
 import { cache } from './cache.js';
 import toggleRoutes from './routes/toggles-db.js';
 import type { HealthResponse } from './types/index.js';

@@ -9,7 +9,7 @@ import { Pool, PoolClient } from 'pg';
 import * as fs from 'fs';
 import * as path from 'path';
 import { fileURLToPath } from 'url';
-import { getConfig, type Config } from './config.js';
+import { getConfig, type Config } from '../config.js';
 
 // ESM __dirname equivalent
 const __filename = fileURLToPath(import.meta.url);
@@ -125,7 +125,7 @@ export class DatabaseManager {
     this.pool.on('error', (err) => {
       console.error('[DATABASE] [ERROR] Unexpected database pool error:', err);
     });
-    
+
     console.log('[DATABASE] DatabaseManager initialized successfully');
   }
 
@@ -147,7 +147,7 @@ export class DatabaseManager {
       console.log('[DATABASE] Timestamp:', new Date().toISOString());
 
       // Read and execute schema file
-      const schemaPath = path.resolve(__dirname, '../../database/schema.sql');
+      const schemaPath = path.resolve(__dirname, '../../../database/schema.sql');
 
       if (fs.existsSync(schemaPath)) {
         console.log('[DATABASE] Found schema file at:', schemaPath);
@@ -634,18 +634,18 @@ let _db: DatabaseManager | null = null;
  * Get the database manager singleton (lazy initialization)
  */
 export function getDb(): DatabaseManager {
-    if (!_db) {
-        console.log('[DATABASE] Creating new DatabaseManager instance');
-        _db = new DatabaseManager();
-    }
-    return _db;
+  if (!_db) {
+    console.log('[DATABASE] Creating new DatabaseManager instance');
+    _db = new DatabaseManager();
+  }
+  return _db;
 }
 
 // Export for backward compatibility (use getDb() for lazy init)
 export const db = {
-    get instance(): DatabaseManager {
-        return getDb();
-    },
-    initialize: async () => getDb().initialize(),
-    close: async () => _db?.close(),
+  get instance(): DatabaseManager {
+    return getDb();
+  },
+  initialize: async () => getDb().initialize(),
+  close: async () => _db?.close(),
 };

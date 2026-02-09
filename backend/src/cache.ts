@@ -6,7 +6,7 @@
  */
 
 import { createClient, RedisClientType } from 'redis';
-import type { Toggle } from './database.js';
+import type { Toggle } from './db/client.js';
 import { getConfig } from './config.js';
 
 // =============================================================================
@@ -117,7 +117,7 @@ export class CacheManager {
                 this.cacheTtlSeconds,
                 JSON.stringify(toggle)
             );
-        console.log(`[CACHE] [SET] Toggle '${name}' cached successfully`);
+            console.log(`[CACHE] [SET] Toggle '${name}' cached successfully`);
         } catch (error) {
             console.warn(`[CACHE] [ERROR] Cache set error for '${name}':`, error);
         }
