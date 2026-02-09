@@ -111,33 +111,17 @@ export function loadConfig(): Config {
         isProduction: nodeEnv === 'production',
 
         // Database - supports both container and NeonDB
-        db: (() => {
-            const useContainer = getOptional('USE_CONTAINER_DB', 'true') === 'true';
-            
-            if (useContainer) {
-                return {
-                    host: getOptional('DB_HOST', 'localhost'),
-                    port: getInt('DB_PORT', 5432),
-                    name: getOptional('DB_NAME', 'confuse_shared'),
-                    user: getOptional('DB_USER', 'confuse'),
-                    password: getOptional('DB_PASSWORD', 'confuse_pg_secret'),
-                    schema: getOptional('DB_SCHEMA', 'feature_toggles'),
-                    ssl: false,
-                    useContainer: true,
-                };
-            } else {
-                return {
-                    host: getRequired('NEON_DB_HOST'),
-                    port: getInt('NEON_DB_PORT', 5432),
-                    name: getRequired('NEON_DB_NAME'),
-                    user: getRequired('NEON_DB_USER'),
-                    password: getRequired('NEON_DB_PASSWORD'),
-                    schema: getOptional('DB_SCHEMA', 'feature_toggles'),
-                    ssl: true,
-                    useContainer: false,
-                };
-            }
-        })(),
+        // Database
+        db: {
+            host: getOptional('DB_HOST', 'localhost'),
+            port: getInt('DB_PORT', 5432),
+            name: getOptional('DB_NAME', 'confuse_shared'),
+            user: getOptional('DB_USER', 'confuse'),
+            password: getOptional('DB_PASSWORD', 'confuse_pg_secret'),
+            schema: getOptional('DB_SCHEMA', 'feature_toggles'),
+            ssl: getOptional('DB_SSL', 'false') === 'true',
+            useContainer: false, // Legacy flag, keeping for type compatibility if needed
+        },
 
         // Redis
         redis: {
