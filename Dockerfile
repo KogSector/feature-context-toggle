@@ -55,7 +55,7 @@ USER nextjs
 # Environment Variables (configure via Azure Container Apps environment settings)
 # =============================================================================
 # Required:
-#   DATABASE_URL, REDIS_URL
+#   DATABASE_URL
 # Optional (with defaults):
 #   PORT=3099, NODE_ENV=production, CACHE_TTL_SECONDS=300
 #   CORS_ORIGINS=<comma-separated-urls>
