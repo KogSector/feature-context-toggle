@@ -27,13 +27,10 @@ export interface Config {
         useContainer: boolean;
     };
 
-    // Redis
-    redis: {
-        url: string;
-        cacheTtlSeconds: number;
-        cacheKeyPrefix: string;
-        allTogglesKey: string;
-    };
+    // Cache
+    cacheTtlSeconds: number;
+    cacheKeyPrefix: string;
+    allTogglesKey: string;
 
     // CORS
     corsOrigins: string[];
@@ -123,13 +120,10 @@ export function loadConfig(): Config {
             useContainer: false, // Legacy flag, keeping for type compatibility if needed
         },
 
-        // Redis
-        redis: {
-            url: getRequired('REDIS_URL'),
-            cacheTtlSeconds: getInt('CACHE_TTL_SECONDS', 5),
-            cacheKeyPrefix: getOptional('CACHE_KEY_PREFIX', 'toggle:'),
-            allTogglesKey: getOptional('ALL_TOGGLES_KEY', 'toggles:all'),
-        },
+        // Cache
+        cacheTtlSeconds: getInt('CACHE_TTL_SECONDS', 5),
+        cacheKeyPrefix: getOptional('CACHE_KEY_PREFIX', 'toggle:'),
+        allTogglesKey: getOptional('ALL_TOGGLES_KEY', 'toggles:all'),
 
         // CORS
         corsOrigins: getOptional('CORS_ORIGINS', 'http://localhost:5173,http://localhost:3000').split(','),

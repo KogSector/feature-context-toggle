@@ -1,81 +1,63 @@
 /**
- * Feature Context Toggle - Redis Cache Layer
+ * Feature Context Toggle - In-Memory Cache Layer
  * 
- * Provides high-performance caching for toggle reads with automatic
- * invalidation on updates.
+ * Provides high-performance in-memory caching for toggle reads with automatic
+ * invalidation on updates. No external dependencies required.
  */
 
-import { createClient, RedisClientType } from 'redis';
 import type { Toggle } from './db/client.js';
 import { getConfig } from './config.js';
+
+// =============================================================================
+// Cache Entry with TTL
+// =============================================================================
+
+interface CacheEntry<T> {
+    data: T;
+    expiresAt: number;
+}
 
 // =============================================================================
 // Cache Manager
 // =============================================================================
 
 export class CacheManager {
-    private client: RedisClientType | null = null;
-    private connected: boolean = false;
-    private connecting: boolean = false;
+    private store: Map<string, CacheEntry<any>> = new Map();
+    private initialized: boolean = false;
     private cacheTtlSeconds: number = 5;
     private cacheKeyPrefix: string = 'toggle:';
     private allTogglesKey: string = 'toggles:all';
+    private cleanupInterval: ReturnType<typeof setInterval> | null = null;
 
     /**
-     * Initialize Redis connection
+     * Initialize in-memory cache
      */
     async initialize(): Promise<boolean> {
-        console.log('[CACHE] Initializing Redis connection...');
-        if (this.connected || this.connecting) {
-            console.log('[CACHE] Already connected or connecting, skipping...');
-            return this.connected;
+        console.log('[CACHE] Initializing in-memory cache...');
+        if (this.initialized) {
+            console.log('[CACHE] Already initialized, skipping...');
+            return true;
         }
-
-        this.connecting = true;
 
         // Load configuration
         const config = getConfig();
-        const redisUrl = config.redis.url;
-        this.cacheTtlSeconds = config.redis.cacheTtlSeconds;
-        this.cacheKeyPrefix = config.redis.cacheKeyPrefix;
-        this.allTogglesKey = config.redis.allTogglesKey;
+        this.cacheTtlSeconds = config.cacheTtlSeconds;
+        this.cacheKeyPrefix = config.cacheKeyPrefix;
+        this.allTogglesKey = config.allTogglesKey;
 
-        try {
-            console.log(`[CACHE] Connecting to Redis at: ${redisUrl}`);
-            this.client = createClient({ url: redisUrl });
+        // Periodic cleanup of expired entries every 30 seconds
+        this.cleanupInterval = setInterval(() => this.cleanup(), 30_000);
 
-            this.client.on('error', (err) => {
-                console.warn('[CACHE] [ERROR] Redis cache error:', err.message);
-                this.connected = false;
-            });
-
-            this.client.on('connect', () => {
-                console.log('[CACHE] ✅ Redis cache connected');
-            });
-
-            this.client.on('reconnecting', () => {
-                console.log('[CACHE] 🔄 Redis cache reconnecting...');
-            });
-
-            await this.client.connect();
-            this.connected = true;
-            this.connecting = false;
-            console.log('[CACHE] Redis connection established successfully');
-            return true;
-        } catch (error) {
-            console.warn('[CACHE] ⚠️ Redis cache not available, running without cache:',
-                error instanceof Error ? error.message : 'Unknown error');
-            this.connected = false;
-            this.connecting = false;
-            return false;
-        }
+        this.initialized = true;
+        console.log('[CACHE] ✅ In-memory cache initialized successfully');
+        return true;
     }
 
     /**
      * Check if cache is available
      */
     isAvailable(): boolean {
-        return this.connected && this.client !== null;
+        return this.initialized;
     }
 
     /**
@@ -87,17 +69,20 @@ export class CacheManager {
             return null;
         }
 
-        try {
-            const cached = await this.client!.get(`${this.cacheKeyPrefix}${name}`);
-            if (cached) {
-                console.log(`[CACHE] [HIT] Toggle '${name}' found in cache`);
-                return JSON.parse(cached);
-            }
-            console.log(`[CACHE] [MISS] Toggle '${name}' not in cache`);
-        } catch (error) {
-            console.warn(`[CACHE] [ERROR] Cache get error for '${name}':`, error);
+        const key = `${this.cacheKeyPrefix}${name}`;
+        const entry = this.store.get(key);
+
+        if (entry && entry.expiresAt > Date.now()) {
+            console.log(`[CACHE] [HIT] Toggle '${name}' found in cache`);
+            return entry.data;
         }
 
+        // Remove expired entry
+        if (entry) {
+            this.store.delete(key);
+        }
+
+        console.log(`[CACHE] [MISS] Toggle '${name}' not in cache`);
         return null;
     }
 
@@ -110,17 +95,13 @@ export class CacheManager {
             return;
         }
 
-        try {
-            console.log(`[CACHE] [SET] Caching toggle: ${name}`);
-            await this.client!.setEx(
-                `${this.cacheKeyPrefix}${name}`,
-                this.cacheTtlSeconds,
-                JSON.stringify(toggle)
-            );
-            console.log(`[CACHE] [SET] Toggle '${name}' cached successfully`);
-        } catch (error) {
-            console.warn(`[CACHE] [ERROR] Cache set error for '${name}':`, error);
-        }
+        console.log(`[CACHE] [SET] Caching toggle: ${name}`);
+        const key = `${this.cacheKeyPrefix}${name}`;
+        this.store.set(key, {
+            data: toggle,
+            expiresAt: Date.now() + (this.cacheTtlSeconds * 1000),
+        });
+        console.log(`[CACHE] [SET] Toggle '${name}' cached successfully`);
     }
 
     /**
@@ -132,18 +113,18 @@ export class CacheManager {
             return null;
         }
 
-        try {
-            const cached = await this.client!.get(this.allTogglesKey);
-            if (cached) {
-                const toggles = JSON.parse(cached);
-                console.log(`[CACHE] [HIT-ALL] Found ${toggles.length} toggles in cache`);
-                return toggles;
-            }
-            console.log('[CACHE] [MISS-ALL] All toggles not in cache');
-        } catch (error) {
-            console.warn('[CACHE] [ERROR] Cache get all error:', error);
+        const entry = this.store.get(this.allTogglesKey);
+        if (entry && entry.expiresAt > Date.now()) {
+            console.log(`[CACHE] [HIT-ALL] Found ${entry.data.length} toggles in cache`);
+            return entry.data;
         }
 
+        // Remove expired entry
+        if (entry) {
+            this.store.delete(this.allTogglesKey);
+        }
+
+        console.log('[CACHE] [MISS-ALL] All toggles not in cache');
         return null;
     }
 
@@ -156,28 +137,19 @@ export class CacheManager {
             return;
         }
 
-        try {
-            console.log(`[CACHE] [SET-ALL] Caching ${toggles.length} toggles`);
-            await this.client!.setEx(
-                this.allTogglesKey,
-                this.cacheTtlSeconds,
-                JSON.stringify(toggles)
-            );
+        console.log(`[CACHE] [SET-ALL] Caching ${toggles.length} toggles`);
+        const expiresAt = Date.now() + (this.cacheTtlSeconds * 1000);
 
-            // Also cache individual toggles
-            const pipeline = this.client!.multi();
-            for (const toggle of toggles) {
-                pipeline.setEx(
-                    `${this.cacheKeyPrefix}${toggle.name}`,
-                    this.cacheTtlSeconds,
-                    JSON.stringify(toggle)
-                );
-            }
-            await pipeline.exec();
-            console.log(`[CACHE] [SET-ALL] ${toggles.length} toggles cached successfully`);
-        } catch (error) {
-            console.warn('[CACHE] [ERROR] Cache set all error:', error);
+        this.store.set(this.allTogglesKey, { data: toggles, expiresAt });
+
+        // Also cache individual toggles
+        for (const toggle of toggles) {
+            this.store.set(`${this.cacheKeyPrefix}${toggle.name}`, {
+                data: toggle,
+                expiresAt,
+            });
         }
+        console.log(`[CACHE] [SET-ALL] ${toggles.length} toggles cached successfully`);
     }
 
     /**
@@ -189,16 +161,10 @@ export class CacheManager {
             return;
         }
 
-        try {
-            console.log(`[CACHE] [INVALIDATE] Invalidating cache for toggle: ${name}`);
-            await this.client!.del([
-                `${this.cacheKeyPrefix}${name}`,
-                this.allTogglesKey,
-            ]);
-            console.log(`[CACHE] [INVALIDATE] Cache invalidated for toggle: ${name}`);
-        } catch (error) {
-            console.warn(`[CACHE] [ERROR] Cache invalidate error for '${name}':`, error);
-        }
+        console.log(`[CACHE] [INVALIDATE] Invalidating cache for toggle: ${name}`);
+        this.store.delete(`${this.cacheKeyPrefix}${name}`);
+        this.store.delete(this.allTogglesKey);
+        console.log(`[CACHE] [INVALIDATE] Cache invalidated for toggle: ${name}`);
     }
 
     /**
@@ -210,19 +176,9 @@ export class CacheManager {
             return;
         }
 
-        try {
-            console.log('[CACHE] [INVALIDATE-ALL] Invalidating all cached toggles');
-            // Get all toggle keys and delete them
-            const keys = await this.client!.keys(`${this.cacheKeyPrefix}*`);
-            if (keys.length > 0) {
-                await this.client!.del(keys);
-                console.log(`[CACHE] [INVALIDATE-ALL] Deleted ${keys.length} individual toggle keys`);
-            }
-            await this.client!.del(this.allTogglesKey);
-            console.log('[CACHE] [INVALIDATE-ALL] All cache invalidated successfully');
-        } catch (error) {
-            console.warn('[CACHE] [ERROR] Cache invalidate all error:', error);
-        }
+        console.log('[CACHE] [INVALIDATE-ALL] Invalidating all cached toggles');
+        this.store.clear();
+        console.log('[CACHE] [INVALIDATE-ALL] All cache invalidated successfully');
     }
 
     /**
@@ -231,41 +187,42 @@ export class CacheManager {
     async healthCheck(): Promise<{ healthy: boolean; latencyMs: number }> {
         console.log('[CACHE] [HEALTH] Performing health check...');
         if (!this.isAvailable()) {
-            console.log('[CACHE] [HEALTH] Cache not available');
+            console.log('[CACHE] [HEALTH] Cache not initialized');
             return { healthy: false, latencyMs: 0 };
         }
+        console.log('[CACHE] [HEALTH] Health check passed (in-memory)');
+        return { healthy: true, latencyMs: 0 };
+    }
 
-        const start = Date.now();
-        try {
-            await this.client!.ping();
-            const latency = Date.now() - start;
-            console.log(`[CACHE] [HEALTH] Health check passed, latency: ${latency}ms`);
-            return {
-                healthy: true,
-                latencyMs: latency,
-            };
-        } catch (error) {
-            const latency = Date.now() - start;
-            console.error(`[CACHE] [HEALTH] Health check failed, latency: ${latency}ms`, error);
-            return {
-                healthy: false,
-                latencyMs: latency,
-            };
+    /**
+     * Clean up expired entries
+     */
+    private cleanup(): void {
+        const now = Date.now();
+        let cleaned = 0;
+        for (const [key, entry] of this.store.entries()) {
+            if (entry.expiresAt <= now) {
+                this.store.delete(key);
+                cleaned++;
+            }
+        }
+        if (cleaned > 0) {
+            console.log(`[CACHE] Cleaned up ${cleaned} expired entries`);
         }
     }
 
     /**
-     * Close Redis connection
+     * Close cache (cleanup resources)
      */
     async close(): Promise<void> {
-        console.log('[CACHE] Closing Redis connection...');
-        if (this.client && this.connected) {
-            await this.client.quit();
-            this.connected = false;
-            console.log('[CACHE] Redis connection closed');
-        } else {
-            console.log('[CACHE] No active connection to close');
+        console.log('[CACHE] Closing in-memory cache...');
+        if (this.cleanupInterval) {
+            clearInterval(this.cleanupInterval);
+            this.cleanupInterval = null;
         }
+        this.store.clear();
+        this.initialized = false;
+        console.log('[CACHE] In-memory cache closed');
     }
 }
 

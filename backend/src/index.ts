@@ -1,7 +1,7 @@
 /**
  * Feature Context Toggle - Backend Entry Point
  * 
- * Express server for managing feature toggles with PostgreSQL and Redis.
+ * Express server for managing feature toggles with PostgreSQL and in-memory caching.
  */
 
 import 'dotenv/config';
@@ -191,12 +191,12 @@ async function start() {
     }
 
     // Initialize cache
-    logger.info('[STARTUP] Initializing Redis cache connection...');
+    logger.info('[STARTUP] Initializing cache...');
     const cacheReady = await cache.initialize();
     if (!cacheReady) {
         logger.warn('[STARTUP] ⚠️  Cache not available, running without caching');
     } else {
-        logger.info('[STARTUP] ✅ Redis cache initialized successfully');
+        logger.info('[STARTUP] ✅ Cache initialized successfully');
     }
 
     // Start server
