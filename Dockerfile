@@ -1,23 +1,23 @@
 # =============================================================================
-# Feature Toggle Service - Dockerfile (Node.js 24 LTS)
+# Feature Toggle Service - Dockerfile (Node.js 22 LTS)
 # Optimized for Azure Container Apps deployment
 # Role: Central feature toggle service for the ConFuse platform
 # Includes both backend API and frontend dashboard
 # =============================================================================
 
-FROM node:24-alpine AS frontend-builder
+FROM node:22-alpine AS frontend-builder
 
 WORKDIR /app
 # Copy root tsconfig (frontend extends it)
-COPY tsconfig.json ./
+COPY feature-context-toggle/tsconfig.json ./
 WORKDIR /app/frontend
-COPY frontend/package*.json ./
-RUN npm ci --only=production
-COPY frontend ./
+COPY feature-context-toggle/frontend/package*.json ./
+RUN npm install
+COPY feature-context-toggle/frontend ./
 RUN npm run build
 
 # =============================================================================
-FROM node:24-alpine AS production
+FROM node:22-alpine AS production
 
 WORKDIR /app
 
@@ -29,17 +29,19 @@ RUN addgroup -g 1001 -S nodejs && \
     adduser -S nextjs -u 1001
 
 # Copy root tsconfig (needed by backend)
-COPY tsconfig.json ./
+COPY feature-context-toggle/tsconfig.json ./
 
 # Copy database schema for initialization
-COPY database ./database
+COPY feature-context-toggle/database ./database
 
 # Copy backend directory
 COPY shared-middleware ./shared-middleware
 
-# Install dependencies
+# Install and prepare backend
 WORKDIR /app/backend
-RUN npm ci --only=production && npm cache clean --force
+COPY feature-context-toggle/backend/package*.json ./
+RUN npm install && npm cache clean --force
+COPY feature-context-toggle/backend ./
 
 # Build TypeScript
 RUN npm run build
