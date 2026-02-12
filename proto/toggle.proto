@@ -1,0 +1,39 @@
+syntax = "proto3";
+
+package confuse.toggle.v1;
+
+// FeatureToggle service - feature flag management
+service FeatureToggle {
+  // Toggle operations
+  rpc GetToggle(GetToggleRequest) returns (Toggle);
+  rpc ListToggles(ListTogglesRequest) returns (ListTogglesResponse);
+  rpc UpdateToggle(UpdateToggleRequest) returns (Toggle);
+}
+
+// Messages
+message Toggle {
+  string name = 1;
+  bool enabled = 2;
+  string description = 3;
+  string category = 4;  // devOnly, userFacing, ops
+  map<string, string> metadata = 5;
+  int64 created_at = 6;
+  int64 updated_at = 7;
+}
+
+message GetToggleRequest {
+  string name = 1;
+}
+
+message ListTogglesRequest {
+  optional string category = 1;
+}
+
+message ListTogglesResponse {
+  repeated Toggle toggles = 1;
+}
+
+message UpdateToggleRequest {
+  string name = 1;
+  bool enabled = 2;
+}
