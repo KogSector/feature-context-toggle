@@ -1,1 +1,0 @@
-src/db/client.ts(12,40): error TS2307: Cannot find module './config.js' or its corresponding type declarations.
