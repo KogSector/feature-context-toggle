@@ -1,6 +1,45 @@
 # =============================================================================
 # Feature Context Toggle - Kubernetes Deployment
+# Covers ALL .env variables via ConfigMap (non-sensitive) + Secret (sensitive)
 # =============================================================================
+
+---
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: feature-toggle-config
+  namespace: confuse-platform
+data:
+  SERVICE_NAME: "feature-context-toggle"
+  PORT: "3099"
+  NODE_ENV: "production"
+  GRPC_ENABLED: "false"
+  GRPC_PORT: "50057"
+  CORS_ORIGINS: "https://confuse.platform.example.com"
+  CACHE_TTL_SECONDS: "300"
+  # DB config (non-sensitive parts)
+  DB_PORT: "5432"
+  DB_SCHEMA: "feature_toggles"
+  DB_SSL: "true"
+
+---
+apiVersion: v1
+kind: Secret
+metadata:
+  name: feature-toggle-secrets
+  namespace: confuse-platform
+type: Opaque
+stringData:
+  # PostgreSQL (REQUIRED)
+  DATABASE_URL: "CHANGEME_postgresql://user:pass@host:5432/postgres?sslmode=require"
+  DB_HOST: "CHANGEME_DB_HOST"
+  DB_NAME: "CHANGEME_DB_NAME"
+  DB_USER: "CHANGEME_DB_USER"
+  DB_PASSWORD: "CHANGEME_DB_PASSWORD"
+  # Redis (REQUIRED for caching)
+  REDIS_URL: "CHANGEME_redis://default:password@host:port"
+
+---
 apiVersion: apps/v1
 kind: Deployment
 metadata:
@@ -31,10 +70,6 @@ spec:
           name: http
         envFrom:
         - configMapRef:
-            name: global-config
-        - secretRef:
-            name: global-secrets
-        - configMapRef:
             name: feature-toggle-config
         - secretRef:
             name: feature-toggle-secrets
@@ -61,9 +96,6 @@ spec:
           periodSeconds: 5
           timeoutSeconds: 3
           failureThreshold: 3
-        securityContext:
-          seccompProfile:
-            type: RuntimeDefault
 
 ---
 apiVersion: v1
@@ -71,8 +103,6 @@ kind: Service
 metadata:
   name: feature-toggle
   namespace: confuse-platform
-  labels:
-    app: feature-toggle
 spec:
   selector:
     app: feature-toggle
