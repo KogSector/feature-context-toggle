@@ -3,10 +3,14 @@ name: Deploy Feature Toggle
 on:
   push:
     branches: [main]
-    paths: ['feature-context-toggle/**']
+    paths:
+      - 'feature-context-toggle/**'
+      - '.github/workflows/deploy.yml'
   pull_request:
     branches: [main]
-    paths: ['feature-context-toggle/**']
+    paths:
+      - 'feature-context-toggle/**'
+      - '.github/workflows/deploy.yml'
   workflow_dispatch:
 
 env:
