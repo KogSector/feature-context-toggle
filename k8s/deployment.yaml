@@ -1,0 +1,84 @@
+# =============================================================================
+# Feature Context Toggle - Kubernetes Deployment
+# =============================================================================
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: feature-toggle
+  namespace: confuse-platform
+  labels:
+    app: feature-toggle
+    version: v1
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: feature-toggle
+  template:
+    metadata:
+      labels:
+        app: feature-toggle
+        version: v1
+    spec:
+      imagePullSecrets:
+      - name: acr-secret
+      containers:
+      - name: feature-toggle
+        image: "confuseimgr.azurecr.io/feature-context-toggle:latest"
+        imagePullPolicy: Always
+        ports:
+        - containerPort: 3099
+          name: http
+        envFrom:
+        - configMapRef:
+            name: global-config
+        - secretRef:
+            name: global-secrets
+        - configMapRef:
+            name: feature-toggle-config
+        - secretRef:
+            name: feature-toggle-secrets
+        resources:
+          requests:
+            memory: "128Mi"
+            cpu: "100m"
+          limits:
+            memory: "256Mi"
+            cpu: "300m"
+        livenessProbe:
+          httpGet:
+            path: /health
+            port: 3099
+          initialDelaySeconds: 30
+          periodSeconds: 10
+          timeoutSeconds: 5
+          failureThreshold: 3
+        readinessProbe:
+          httpGet:
+            path: /health
+            port: 3099
+          initialDelaySeconds: 10
+          periodSeconds: 5
+          timeoutSeconds: 3
+          failureThreshold: 3
+        securityContext:
+          seccompProfile:
+            type: RuntimeDefault
+
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: feature-toggle
+  namespace: confuse-platform
+  labels:
+    app: feature-toggle
+spec:
+  selector:
+    app: feature-toggle
+  ports:
+  - name: http
+    protocol: TCP
+    port: 3099
+    targetPort: 3099
+  type: ClusterIP

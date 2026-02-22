@@ -19,6 +19,7 @@ export interface FeatureToggle {
 
 export interface DemoUser {
     id: string;
+    sub: string; // Alias for id (Auth0 compatibility)
     email: string;
     name: string;
     roles: string[];

@@ -1,7 +1,7 @@
 {
     "name": "@confuse/feature-toggle-sdk",
-    "version": "1.0.0",
-    "description": "TypeScript SDK for ConFuse Feature Toggle service",
+    "version": "1.1.0",
+    "description": "TypeScript SDK for ConFuse Feature Toggle service - Consolidated from auth-middleware",
     "main": "dist/index.js",
     "types": "dist/index.d.ts",
     "type": "module",
