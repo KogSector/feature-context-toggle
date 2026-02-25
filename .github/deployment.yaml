@@ -33,8 +33,10 @@ spec:
         - containerPort: 3099
           name: http
         envFrom:
+        - configMapRef:
+            name: confuse-config
         - secretRef:
-            name: feature-context-toggle-secrets
+            name: confuse-secrets
         resources:
           requests:
             memory: "128Mi"
