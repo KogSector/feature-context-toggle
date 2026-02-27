@@ -81,6 +81,9 @@ INSERT INTO feature_toggles.toggles (name, enabled, description, category, categ
 ('enableHealthChecks', true, 'Enable detailed health check endpoints', 'observability', 'ops',
  '{"description": "Provides /health and /health/live endpoints for container orchestration"}'::jsonb),
 ('enableRateLimiting', true, 'Enable API rate limiting in production', 'security', 'ops',
- '{"description": "Rate limits API requests per user/IP to prevent abuse", "requestsPerMinute": 100}'::jsonb)
+ '{"description": "Rate limits API requests per user/IP to prevent abuse", "requestsPerMinute": 100}'::jsonb),
+-- LLM Control Toggle
+('enableLLM', false, 'Enable LLM processing for AI-powered features', 'ai', 'devOnly',
+ '{"description": "When enabled, allows LLM models to run for semantic analysis, chunking, and entity extraction. Disable to reduce resource usage in development.", "affectedServices": ["unified-processor", "relation-graph", "data-vent"]}'::jsonb)
 ON CONFLICT (name) DO NOTHING;
 
