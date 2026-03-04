@@ -4,7 +4,7 @@
  * Express server for managing feature toggles with PostgreSQL and in-memory caching.
  */
 
-import 'dotenv/config';
+import dotenv from 'dotenv';
 import express from 'express';
 import cors from 'cors';
 import helmet from 'helmet';
@@ -19,6 +19,9 @@ import { logger } from './utils/logger.js';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
+
+dotenv.config({ path: '.env.map' });
+dotenv.config({ path: '.env.secret' });
 
 // Load configuration first (validates required env vars)
 logger.info('[STARTUP] Loading configuration...');
