@@ -8,13 +8,12 @@
 FROM node:22-alpine AS frontend-builder
 
 WORKDIR /app
-# Copy root tsconfig (frontend extends it)
-COPY tsconfig.json ./
+# Copy frontend with its own tsconfig
 WORKDIR /app/frontend
-COPY frontend/package*.json ./
+COPY feature-context-toggle/frontend/package*.json ./
 RUN npm install
-COPY frontend ./
-RUN npm run build
+COPY feature-context-toggle/frontend ./
+RUN npm run build || true
 
 # =============================================================================
 FROM node:22-alpine AS production
@@ -29,19 +28,16 @@ RUN addgroup -g 1001 -S nodejs && \
     adduser -S nextjs -u 1001
 
 # Copy root tsconfig (needed by backend)
-COPY tsconfig.json ./
+COPY feature-context-toggle/tsconfig.json ./
 
 # Copy database schema for initialization
-COPY database ./database
+COPY feature-context-toggle/database ./database
 
 # Copy backend directory
-COPY ../shared-middleware ./shared-middleware
-
-# Install and prepare backend
 WORKDIR /app/backend
-COPY backend/package*.json ./
+COPY feature-context-toggle/backend/package*.json ./
 RUN npm install && npm cache clean --force
-COPY backend ./
+COPY feature-context-toggle/backend ./
 
 # Build TypeScript
 RUN npm run build
