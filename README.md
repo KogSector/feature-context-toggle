@@ -40,6 +40,118 @@ npm run dev
 | `/api/toggles/:name` | PATCH | Update toggle state |
 | `/api/toggles/auth-bypass/user` | GET | Get demo user (when bypass enabled) |
 
+## Deployment
+
+### Environment Variables
+
+```env
+# Database Configuration
+DB_HOST=localhost
+DB_PORT=5432
+DB_NAME=confuse_shared
+DB_USER=confuse
+DB_PASSWORD=<password>
+
+# Service Configuration
+PORT=3099
+NODE_ENV=production
+
+# Frontend (Development)
+FRONTEND_PORT=5173
+```
+
+### Production Deployment
+
+#### Docker Deployment
+```bash
+# Build image
+docker build -t confuse/feature-toggle .
+
+# Run container
+docker run -d \
+  --name feature-toggle \
+  -p 3099:3099 \
+  -e DB_HOST=postgres \
+  -e DB_PASSWORD=<password> \
+  confuse/feature-toggle
+```
+
+#### Kubernetes Deployment
+```yaml
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: feature-toggle
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: feature-toggle
+  template:
+    metadata:
+      labels:
+        app: feature-toggle
+    spec:
+      containers:
+      - name: feature-toggle
+        image: confuse/feature-toggle:latest
+        ports:
+        - containerPort: 3099
+        env:
+        - name: DB_HOST
+          value: "postgres-service"
+        - name: DB_PASSWORD
+          valueFrom:
+            secretKeyRef:
+              name: confuse-secrets
+              key: db-password
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: feature-toggle-service
+spec:
+  selector:
+    app: feature-toggle
+  ports:
+  - port: 3099
+    targetPort: 3099
+```
+
+### Development Setup
+
+```bash
+# Install dependencies
+npm install
+
+# Start both backend and frontend
+npm run dev
+
+# Or start individually
+npm run dev:backend    # Backend only on port 3099
+npm run dev:frontend   # Frontend only on port 5173
+
+# Build for production
+npm run build
+
+# Start production server
+npm start
+```
+
+### Database Setup
+
+```bash
+# Create database
+createdb confuse_shared
+
+# Run migrations
+cd database
+npm run migrate
+
+# Seed with default toggles
+npm run seed
+```
+
 ## Integration with auth-middleware
 
 The auth-middleware service queries this toggle service to check if authentication should be bypassed:
