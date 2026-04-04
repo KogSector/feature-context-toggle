@@ -1,0 +1,32 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: feature-context-toggle-config
+  namespace: confuse
+data:
+  # Service Configuration
+  PORT: "3099"
+  HOST: "0.0.0.0"
+  ENVIRONMENT: "production"
+  
+  # CORS Configuration
+  CORS_ORIGINS: "http://localhost:3000,https://confuse.platform.example.com"
+  
+  # Feature Flag Configuration
+  DEFAULT_TTL_SECONDS: "3600"
+  CACHE_SIZE: "1000"
+  
+  # A/B Testing Configuration
+  AB_TESTING_ENABLED: "true"
+  DEFAULT_TRAFFIC_SPLIT: "50"
+  
+  # Analytics Configuration
+  ANALYTICS_ENABLED: "true"
+  METRICS_RETENTION_DAYS: "30"
+  
+  # Logging
+  LOG_LEVEL: "INFO"
+  
+  # Rate Limiting
+  RATE_LIMIT_REQUESTS_PER_MINUTE: "1000"
+  RATE_LIMIT_BURST: "100"
