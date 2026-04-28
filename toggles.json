@@ -1,20 +1,4 @@
 {
-  "authBypass": {
-    "enabled": true,
-    "description": "Bypass authentication and use a demo user for development/testing",
-    "category": "authentication",
-    "demoUser": {
-      "id": "user-rishabh-001",
-      "email": "rishabh.babi@gmail.com",
-      "name": "Rishabh Babi",
-      "roles": [
-        "user",
-        "developer",
-        "admin"
-      ],
-      "sessionId": "session-rishabh-001"
-    }
-  },
   "debugLogging": {
     "enabled": false,
     "description": "Enable verbose debug logging across all services",
