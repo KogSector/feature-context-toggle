@@ -84,12 +84,14 @@ router.get('/', async (req: Request, res: Response) => {
             if (cached) {
                 console.log(`[ROUTE] GET /api/toggles - Cache hit, returning ${cached.length} toggles`);
                 const togglesObj = toToggleState(cached);
+                const arrayFormat = cached.map(toApiFormat);
                 return res.json({
                     success: true,
-                    data: format === 'array' ? cached.map(toApiFormat) : togglesObj,
+                    data: format === 'array' ? arrayFormat : togglesObj,
+                    toggles: arrayFormat, // For backward compatibility with Python clients
                     cached: true,
                     timestamp: new Date().toISOString(),
-                } as ApiResponse);
+                });
             }
         }
 
@@ -106,16 +108,18 @@ router.get('/', async (req: Request, res: Response) => {
             await cache.setAllToggles(toggles);
         }
 
+        const arrayFormat = toggles.map(toApiFormat);
         const responseData = format === 'array'
-            ? toggles.map(toApiFormat)
+            ? arrayFormat
             : toToggleState(toggles);
 
         res.json({
             success: true,
             data: responseData,
+            toggles: arrayFormat, // For backward compatibility with Python clients
             cached: false,
             timestamp: new Date().toISOString(),
-        } as ApiResponse);
+        });
     } catch (error) {
         console.error('[ROUTE] [ERROR] GET /api/toggles - Error fetching toggles:', error);
         res.status(500).json({
@@ -224,12 +228,14 @@ router.get('/:name', async (req: Request, res: Response) => {
         const cached = await cache.getToggle(name);
         if (cached) {
             console.log(`[ROUTE] GET /api/toggles/${name} - Cache hit`);
+            const apiToggle = toApiFormat(cached);
             return res.json({
                 success: true,
-                data: toApiFormat(cached),
+                data: apiToggle,
+                ...apiToggle, // Expose at root for Python clients
                 cached: true,
                 timestamp: new Date().toISOString(),
-            } as ApiResponse);
+            });
         }
 
         // Fetch from database
@@ -248,12 +254,14 @@ router.get('/:name', async (req: Request, res: Response) => {
         await cache.setToggle(name, toggle);
 
         console.log(`[ROUTE] GET /api/toggles/${name} - Toggle found and returned`);
+        const apiToggle = toApiFormat(toggle);
         res.json({
             success: true,
-            data: toApiFormat(toggle),
+            data: apiToggle,
+            ...apiToggle, // Expose at root for Python clients
             cached: false,
             timestamp: new Date().toISOString(),
-        } as ApiResponse);
+        });
     } catch (error) {
         console.error(`[ROUTE] [ERROR] GET /api/toggles/${name} - Error:`, error);
         res.status(500).json({

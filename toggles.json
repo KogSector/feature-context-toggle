@@ -13,5 +13,15 @@
     "enabled": true,
     "description": "Show post-login intent-based onboarding for new users",
     "category": "userFacing"
+  },
+  "hideOnboarding": {
+    "enabled": false,
+    "description": "Hide the initial onboarding screen for new users",
+    "category": "ui"
+  },
+  "hideSwitchUse": {
+    "enabled": false,
+    "description": "Hide the Switch Use button in the dashboard",
+    "category": "ui"
   }
 }

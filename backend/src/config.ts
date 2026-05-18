@@ -108,17 +108,42 @@ export function loadConfig(): Config {
         isProduction: nodeEnv === 'production',
 
         // Database - supports both container and NeonDB
-        // Database
-        db: {
-            host: getOptional('DB_HOST', 'localhost'),
-            port: getInt('DB_PORT', 5432),
-            name: getOptional('DB_NAME', 'confuse_shared'),
-            user: getOptional('DB_USER', 'confuse'),
-            password: getOptional('DB_PASSWORD', 'confuse_pg_secret'),
-            schema: getOptional('DB_SCHEMA', 'feature_toggles'),
-            ssl: getOptional('DB_SSL', 'false') === 'true',
-            useContainer: false, // Legacy flag, keeping for type compatibility if needed
-        },
+        db: (() => {
+            let host = getOptional('DB_HOST', 'localhost');
+            let port = getInt('DB_PORT', 5432);
+            let name = getOptional('DB_NAME', 'confuse_shared');
+            let user = getOptional('DB_USER', 'confuse');
+            let password = getOptional('DB_PASSWORD', 'confuse_pg_secret');
+            let ssl = getOptional('DB_SSL', 'false') === 'true';
+
+            const dbUrl = process.env.DATABASE_URL;
+            if (dbUrl) {
+                try {
+                    const parsedUrl = new URL(dbUrl);
+                    host = parsedUrl.hostname;
+                    port = parsedUrl.port ? parseInt(parsedUrl.port, 10) : 5432;
+                    name = parsedUrl.pathname.replace(/^\//, '');
+                    user = decodeURIComponent(parsedUrl.username);
+                    password = decodeURIComponent(parsedUrl.password);
+                    if (dbUrl.includes('sslmode=require') || dbUrl.includes('ssl=true')) {
+                        ssl = true;
+                    }
+                } catch (e) {
+                    console.error('Failed to parse DATABASE_URL from environment:', e);
+                }
+            }
+
+            return {
+                host,
+                port,
+                name,
+                user,
+                password,
+                schema: getOptional('DB_SCHEMA', 'feature_toggles'),
+                ssl,
+                useContainer: false,
+            };
+        })(),
 
         // Cache
         cacheTtlSeconds: getInt('CACHE_TTL_SECONDS', 5),

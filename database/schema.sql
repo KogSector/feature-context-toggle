@@ -130,6 +130,14 @@ INSERT INTO feature_toggles.toggles (name, enabled, description, category, categ
 ON CONFLICT (name) DO NOTHING;
 
 -- =============================================================================
+-- Default Toggles - User Interface
+-- =============================================================================
+INSERT INTO feature_toggles.toggles (name, enabled, description, category, category_type, metadata) VALUES
+('hideOnboarding', false, 'Hide the initial onboarding screen for new users', 'ui', 'userFacing', '{}'::jsonb),
+('hideSwitchUse', false, 'Hide the Switch Use button in the dashboard', 'ui', 'userFacing', '{}'::jsonb)
+ON CONFLICT (name) DO NOTHING;
+
+-- =============================================================================
 -- Grant Permissions (for production, adjust as needed)
 -- =============================================================================
 -- GRANT USAGE ON SCHEMA feature_toggles TO confuse_app;
