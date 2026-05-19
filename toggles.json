@@ -15,12 +15,12 @@
     "category": "userFacing"
   },
   "hideOnboarding": {
-    "enabled": false,
+    "enabled": true,
     "description": "Hide the initial onboarding screen for new users",
     "category": "ui"
   },
   "hideSwitchUse": {
-    "enabled": false,
+    "enabled": true,
     "description": "Hide the Switch Use button in the dashboard",
     "category": "ui"
   }
