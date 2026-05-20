@@ -10,7 +10,6 @@ import type {
     FeatureToggle,
     ToggleState,
     ApiResponse,
-    DemoUser,
 } from './types.js';
 
 // =============================================================================
@@ -141,31 +140,6 @@ export class ToggleClient {
         }
     }
 
-    /**
-     * Get demo user for auth bypass (development only)
-     */
-    async getDemoUser(): Promise<DemoUser | null> {
-        const cached = this.getCached<DemoUser>('demoUser');
-        if (cached !== null) {
-            return cached;
-        }
-
-        try {
-            const response = await this.fetchWithRetry<ApiResponse<DemoUser>>(
-                '/api/toggles/auth-bypass/user'
-            );
-
-            if (response.success && response.data) {
-                this.setCache('demoUser', response.data);
-                return response.data;
-            }
-
-            return null;
-        } catch (error) {
-            this.handleError(error as Error);
-            return null;
-        }
-    }
 
     /**
      * Check multiple toggles at once

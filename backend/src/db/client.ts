@@ -517,35 +517,6 @@ export class DatabaseManager {
   }
 
   // =========================================================================
-  // Demo User Operations
-  // =========================================================================
-
-  /**
-   * Get demo user for auth bypass
-   */
-  async getDemoUser(toggleName: string = 'authBypass'): Promise<Record<string, unknown> | null> {
-    console.log(`[DATABASE] [DEMO] Getting demo user for toggle: ${toggleName}`);
-    // In production, never return demo user
-    if (this.isProduction) {
-      console.log('[DATABASE] [DEMO] Production mode - demo user disabled');
-      return null;
-    }
-
-    const result = await this.pool.query(
-      `SELECT metadata->>'demoUser' as demo_user FROM toggles 
-             WHERE name = $1 AND enabled = true AND category_type = 'devOnly'`,
-      [toggleName]
-    );
-
-    if (result.rows[0]?.demo_user) {
-      console.log('[DATABASE] [DEMO] Demo user found and returned');
-      return JSON.parse(result.rows[0].demo_user);
-    }
-    console.log('[DATABASE] [DEMO] No demo user found or toggle disabled');
-    return null;
-  }
-
-  // =========================================================================
   // Audit Log Operations
   // =========================================================================
 

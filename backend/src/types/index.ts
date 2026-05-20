@@ -8,20 +8,11 @@
 
 export type CategoryType = 'devOnly' | 'userFacing' | 'ops';
 
-export interface DemoUser {
-    id: string;
-    email: string;
-    name: string;
-    roles: string[];
-    sessionId: string;
-}
-
 export interface FeatureToggle {
     enabled: boolean;
     description: string;
     category: string;
     categoryType?: CategoryType;
-    demoUser?: DemoUser;
     [key: string]: unknown;
 }
 

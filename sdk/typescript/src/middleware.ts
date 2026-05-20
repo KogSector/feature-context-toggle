@@ -108,43 +108,6 @@ export function attachToggles(toggleNames: string[]): RequestHandler {
     };
 }
 
-/**
- * Express middleware that checks auth bypass toggle and attaches demo user.
- * 
- * @example
- * ```typescript
- * // In auth middleware
- * app.use(checkAuthBypass());
- * 
- * app.use((req, res, next) => {
- *   if (req.bypassUser) {
- *     // Use demo user instead of real auth
- *     req.user = req.bypassUser;
- *   }
- *   next();
- * });
- * ```
- */
-export function checkAuthBypass(): RequestHandler {
-    return async (req: Request, _res: Response, next: NextFunction): Promise<void> => {
-        try {
-            const client = getToggleClient();
-            const enabled = await client.isEnabled('authBypass');
-
-            if (enabled) {
-                const demoUser = await client.getDemoUser();
-                if (demoUser) {
-                    (req as Request & { bypassUser?: unknown }).bypassUser = demoUser;
-                }
-            }
-        } catch (error) {
-            console.warn('[FeatureToggle] Error checking auth bypass:', error);
-        }
-
-        next();
-    };
-}
-
 // =============================================================================
 // Type Augmentation for Express
 // =============================================================================
@@ -153,13 +116,6 @@ declare global {
     namespace Express {
         interface Request {
             toggles?: Record<string, boolean>;
-            bypassUser?: {
-                id: string;
-                email: string;
-                name: string;
-                roles: string[];
-                sessionId: string;
-            };
         }
     }
 }

@@ -18,7 +18,6 @@ import type {
     ToggleState,
     FeatureToggle,
     ApiResponse,
-    DemoUser,
     HealthResponse,
     AuditEntry
 } from '../types/index.js';
@@ -182,38 +181,6 @@ router.get('/audit', async (req: Request, res: Response) => {
     }
 });
 
-// =============================================================================
-// GET /api/toggles/auth-bypass/user - Get demo user for auth bypass
-// =============================================================================
-router.get('/auth-bypass/user', async (_req: Request, res: Response) => {
-    console.log('[ROUTE] GET /api/toggles/auth-bypass/user - Fetching demo user');
-    try {
-        const demoUser = await getDb().getDemoUser('authBypass');
-
-        if (!demoUser) {
-            console.log('[ROUTE] GET /api/toggles/auth-bypass/user - No demo user found or auth bypass disabled');
-            return res.status(404).json({
-                success: false,
-                error: 'Auth bypass is disabled or demo user not configured',
-                timestamp: new Date().toISOString(),
-            } as ApiResponse);
-        }
-
-        console.log('[ROUTE] GET /api/toggles/auth-bypass/user - Demo user found and returned');
-        res.json({
-            success: true,
-            data: demoUser,
-            timestamp: new Date().toISOString(),
-        } as ApiResponse);
-    } catch (error) {
-        console.error('[ROUTE] [ERROR] GET /api/toggles/auth-bypass/user - Error:', error);
-        res.status(500).json({
-            success: false,
-            error: 'Failed to get demo user',
-            timestamp: new Date().toISOString(),
-        } as ApiResponse);
-    }
-});
 
 // =============================================================================
 // GET /api/toggles/:name - Get a specific toggle

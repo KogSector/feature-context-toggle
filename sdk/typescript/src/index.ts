@@ -31,7 +31,6 @@
 export type {
     CategoryType,
     FeatureToggle,
-    DemoUser,
     ToggleState,
     ApiResponse,
     ToggleClientConfig,
@@ -51,39 +50,13 @@ export {
 export {
     requireToggle,
     attachToggles,
-    checkAuthBypass,
 } from './middleware.js';
 
 // =============================================================================
-// Convenience Functions (auth-middleware compatibility)
+// Convenience Functions
 // =============================================================================
 
-import type { DemoUser } from './types.js';
 import { getToggleClient } from './client.js';
-
-/**
- * Check if auth bypass is enabled.
- * Convenience wrapper matching auth-middleware's inline API.
- */
-export async function isAuthBypassEnabled(): Promise<boolean> {
-    try {
-        return await getToggleClient().isEnabled('authBypass');
-    } catch {
-        return false;
-    }
-}
-
-/**
- * Get the demo user for bypass mode.
- * Convenience wrapper matching auth-middleware's inline API.
- */
-export async function getBypassUser(): Promise<DemoUser | null> {
-    try {
-        return await getToggleClient().getDemoUser();
-    } catch {
-        return null;
-    }
-}
 
 /**
  * Clear the toggle cache (useful for testing).

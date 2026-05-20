@@ -17,15 +17,6 @@ export interface FeatureToggle {
     metadata?: Record<string, unknown>;
 }
 
-export interface DemoUser {
-    id: string;
-    sub: string; // Alias for id (Auth0 compatibility)
-    email: string;
-    name: string;
-    roles: string[];
-    sessionId: string;
-}
-
 export interface ToggleState {
     [key: string]: Omit<FeatureToggle, 'name'>;
 }
