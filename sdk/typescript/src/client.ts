@@ -61,8 +61,9 @@ export class ToggleClient {
      * Get a specific toggle by name
      */
     async getToggle(toggleName: string): Promise<FeatureToggle | null> {
+        const cacheKey = `toggle:${toggleName}`;
         // Check cache first
-        const cached = this.getCached<FeatureToggle>(`toggle:${toggleName}`);
+        const cached = this.getCached<FeatureToggle>(cacheKey);
         if (cached !== null) {
             return cached;
         }
@@ -73,13 +74,21 @@ export class ToggleClient {
             );
 
             if (response.success && response.data) {
-                this.setCache(`toggle:${toggleName}`, response.data);
+                this.setCache(cacheKey, response.data);
                 return response.data;
             }
 
             return null;
         } catch (error) {
             this.handleError(error as Error);
+            
+            // Fallback to stale cache if available
+            const staleCache = this.getStaleCached<FeatureToggle>(cacheKey);
+            if (staleCache !== null) {
+                console.warn(`[FeatureToggle] Using stale cache for toggle: ${toggleName}`);
+                return staleCache;
+            }
+            
             return null;
         }
     }
@@ -109,6 +118,13 @@ export class ToggleClient {
             return {};
         } catch (error) {
             this.handleError(error as Error);
+            
+            // Fallback to stale cache if available
+            if (this.allTogglesCache) {
+                console.warn(`[FeatureToggle] Using stale cache for all toggles`);
+                return this.allTogglesCache.data;
+            }
+            
             return {};
         }
     }
@@ -136,6 +152,14 @@ export class ToggleClient {
             return {};
         } catch (error) {
             this.handleError(error as Error);
+            
+            // Fallback to stale cache if available
+            const staleCache = this.getStaleCached<ToggleState>(cacheKey);
+            if (staleCache !== null) {
+                console.warn(`[FeatureToggle] Using stale cache for category: ${category}`);
+                return staleCache;
+            }
+            
             return {};
         }
     }
@@ -184,8 +208,14 @@ export class ToggleClient {
         if (entry && Date.now() < entry.expiresAt) {
             return entry.data;
         }
-        this.cache.delete(key);
+        // Note: We deliberately do not delete the cache entry here so it can be used 
+        // as a stale fallback if the API request fails.
         return null;
+    }
+
+    private getStaleCached<T>(key: string): T | null {
+        const entry = this.cache.get(key) as CacheEntry<T> | undefined;
+        return entry ? entry.data : null;
     }
 
     private setCache<T>(key: string, data: T): void {

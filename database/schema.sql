@@ -5,12 +5,12 @@
 -- Run: psql -h localhost -U confuse -d confuse_shared -f schema.sql
 -- =============================================================================
 
-CREATE SCHEMA IF NOT EXISTS feature_toggles;
+
 
 -- =============================================================================
 -- Feature Toggles Table
 -- =============================================================================
-CREATE TABLE IF NOT EXISTS feature_toggles.toggles (
+CREATE TABLE IF NOT EXISTS public.toggles (
     id SERIAL PRIMARY KEY,
     name VARCHAR(100) UNIQUE NOT NULL,
     enabled BOOLEAN DEFAULT false,
@@ -29,7 +29,7 @@ CREATE TABLE IF NOT EXISTS feature_toggles.toggles (
 -- =============================================================================
 -- Audit Log Table
 -- =============================================================================
-CREATE TABLE IF NOT EXISTS feature_toggles.audit_log (
+CREATE TABLE IF NOT EXISTS public.audit_log (
     id SERIAL PRIMARY KEY,
     toggle_name VARCHAR(100) NOT NULL,
     action VARCHAR(20) NOT NULL CHECK (action IN ('create', 'update', 'delete')),
@@ -47,9 +47,9 @@ CREATE TABLE IF NOT EXISTS feature_toggles.audit_log (
 -- =============================================================================
 -- Demo Users Table (for auth bypass)
 -- =============================================================================
-CREATE TABLE IF NOT EXISTS feature_toggles.demo_users (
+CREATE TABLE IF NOT EXISTS public.demo_users (
     id SERIAL PRIMARY KEY,
-    toggle_name VARCHAR(100) REFERENCES feature_toggles.toggles(name) ON DELETE CASCADE,
+    toggle_name VARCHAR(100) REFERENCES public.toggles(name) ON DELETE CASCADE,
     user_data JSONB NOT NULL,
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     CONSTRAINT unique_demo_user_per_toggle UNIQUE (toggle_name)
@@ -58,19 +58,19 @@ CREATE TABLE IF NOT EXISTS feature_toggles.demo_users (
 -- =============================================================================
 -- Indexes
 -- =============================================================================
-CREATE INDEX IF NOT EXISTS idx_toggles_category ON feature_toggles.toggles(category);
-CREATE INDEX IF NOT EXISTS idx_toggles_category_type ON feature_toggles.toggles(category_type);
-CREATE INDEX IF NOT EXISTS idx_toggles_enabled ON feature_toggles.toggles(enabled);
-CREATE INDEX IF NOT EXISTS idx_audit_toggle_name ON feature_toggles.audit_log(toggle_name);
-CREATE INDEX IF NOT EXISTS idx_audit_changed_at ON feature_toggles.audit_log(changed_at DESC);
-CREATE INDEX IF NOT EXISTS idx_audit_action ON feature_toggles.audit_log(action);
+CREATE INDEX IF NOT EXISTS idx_toggles_category ON public.toggles(category);
+CREATE INDEX IF NOT EXISTS idx_toggles_category_type ON public.toggles(category_type);
+CREATE INDEX IF NOT EXISTS idx_toggles_enabled ON public.toggles(enabled);
+CREATE INDEX IF NOT EXISTS idx_audit_toggle_name ON public.audit_log(toggle_name);
+CREATE INDEX IF NOT EXISTS idx_audit_changed_at ON public.audit_log(changed_at DESC);
+CREATE INDEX IF NOT EXISTS idx_audit_action ON public.audit_log(action);
 
 -- =============================================================================
 -- Functions
 -- =============================================================================
 
 -- Auto-update updated_at timestamp
-CREATE OR REPLACE FUNCTION feature_toggles.update_updated_at()
+CREATE OR REPLACE FUNCTION public.update_updated_at()
 RETURNS TRIGGER AS $$
 BEGIN
     NEW.updated_at = CURRENT_TIMESTAMP;
@@ -79,16 +79,16 @@ END;
 $$ LANGUAGE plpgsql;
 
 -- Create trigger for auto-updating updated_at
-DROP TRIGGER IF EXISTS trigger_update_updated_at ON feature_toggles.toggles;
+DROP TRIGGER IF EXISTS trigger_update_updated_at ON public.toggles;
 CREATE TRIGGER trigger_update_updated_at
-    BEFORE UPDATE ON feature_toggles.toggles
+    BEFORE UPDATE ON public.toggles
     FOR EACH ROW
-    EXECUTE FUNCTION feature_toggles.update_updated_at();
+    EXECUTE FUNCTION public.update_updated_at();
 
 -- =============================================================================
 -- Default Toggles - Authentication & Security
 -- =============================================================================
-INSERT INTO feature_toggles.toggles (name, enabled, description, category, category_type, metadata) VALUES
+INSERT INTO public.toggles (name, enabled, description, category, category_type, metadata) VALUES
 ('authBypass', false, 'Bypass authentication and use a demo user for development/testing', 'authentication', 'devOnly', 
  '{"demoUser": {"id": "user-rishabh-001", "email": "rishabh.babi@gmail.com", "name": "Rishabh Babi", "roles": ["user", "developer", "admin"], "sessionId": "session-rishabh-001"}}'::jsonb),
 ('oauthProviders', true, 'Enable OAuth login options (Google, GitHub, etc.)', 'authentication', 'userFacing', '{}'::jsonb),
@@ -100,7 +100,7 @@ ON CONFLICT (name) DO NOTHING;
 -- =============================================================================
 -- Default Toggles - Data Processing
 -- =============================================================================
-INSERT INTO feature_toggles.toggles (name, enabled, description, category, category_type, metadata) VALUES
+INSERT INTO public.toggles (name, enabled, description, category, category_type, metadata) VALUES
 ('chunkingEnabled', true, 'Enable document chunking for processing', 'data', 'ops', '{"maxChunkSize": 1000}'::jsonb),
 ('embeddingCache', true, 'Cache vector embeddings for faster retrieval', 'data', 'ops', '{"ttlHours": 24}'::jsonb),
 ('dataRetention', true, 'Auto-purge old data based on retention policy', 'data', 'ops', '{"retentionDays": 90}'::jsonb),
@@ -110,7 +110,7 @@ ON CONFLICT (name) DO NOTHING;
 -- =============================================================================
 -- Default Toggles - Infrastructure
 -- =============================================================================
-INSERT INTO feature_toggles.toggles (name, enabled, description, category, category_type, metadata) VALUES
+INSERT INTO public.toggles (name, enabled, description, category, category_type, metadata) VALUES
 ('useSharedDatabase', true, 'Use shared PostgreSQL database for all services', 'infrastructure', 'ops', '{}'::jsonb),
 ('distributedTracing', true, 'Enable OpenTelemetry distributed tracing', 'infrastructure', 'ops', '{}'::jsonb),
 ('loadBalancing', false, 'Enable load balancer for horizontal scaling', 'infrastructure', 'ops', '{}'::jsonb),
@@ -121,7 +121,7 @@ ON CONFLICT (name) DO NOTHING;
 -- =============================================================================
 -- Default Toggles - Development & Debugging
 -- =============================================================================
-INSERT INTO feature_toggles.toggles (name, enabled, description, category, category_type, metadata) VALUES
+INSERT INTO public.toggles (name, enabled, description, category, category_type, metadata) VALUES
 ('debugLogging', false, 'Enable verbose debug logging across all services', 'debugging', 'devOnly', '{}'::jsonb),
 ('skipRateLimiting', false, 'Disable rate limiting for API endpoints during testing', 'debugging', 'devOnly', '{}'::jsonb),
 ('mockExternalServices', false, 'Mock external API calls for isolated testing', 'debugging', 'devOnly', '{}'::jsonb),
@@ -132,9 +132,9 @@ ON CONFLICT (name) DO NOTHING;
 -- =============================================================================
 -- Default Toggles - User Interface
 -- =============================================================================
-INSERT INTO feature_toggles.toggles (name, enabled, description, category, category_type, metadata) VALUES
-('hideOnboarding', false, 'Hide the initial onboarding screen for new users', 'ui', 'userFacing', '{}'::jsonb),
-('hideSwitchUse', false, 'Hide the Switch Use button in the dashboard', 'ui', 'userFacing', '{}'::jsonb)
+INSERT INTO public.toggles (name, enabled, description, category, category_type, metadata) VALUES
+('hideOnboarding', true, 'Hide the initial onboarding screen for new users', 'ui', 'userFacing', '{}'::jsonb),
+('hideSwitchUse', true, 'Hide the Switch Use button in the dashboard', 'ui', 'userFacing', '{}'::jsonb)
 ON CONFLICT (name) DO NOTHING;
 
 -- =============================================================================

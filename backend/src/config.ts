@@ -139,7 +139,7 @@ export function loadConfig(): Config {
                 name,
                 user,
                 password,
-                schema: getOptional('DB_SCHEMA', 'feature_toggles'),
+                schema: getOptional('DB_SCHEMA', 'public'),
                 ssl,
                 useContainer: false,
             };

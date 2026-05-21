@@ -177,9 +177,9 @@ export class DatabaseManager {
    */
   private async createMinimalSchema(): Promise<void> {
     await this.pool.query(`
-            CREATE SCHEMA IF NOT EXISTS feature_toggles;
+            CREATE SCHEMA IF NOT EXISTS public;
             
-            CREATE TABLE IF NOT EXISTS feature_toggles.toggles (
+            CREATE TABLE IF NOT EXISTS public.toggles (
                 id SERIAL PRIMARY KEY,
                 name VARCHAR(100) UNIQUE NOT NULL,
                 enabled BOOLEAN DEFAULT false,
@@ -191,7 +191,7 @@ export class DatabaseManager {
                 metadata JSONB DEFAULT '{}'::jsonb
             );
             
-            CREATE TABLE IF NOT EXISTS feature_toggles.audit_log (
+            CREATE TABLE IF NOT EXISTS public.audit_log (
                 id SERIAL PRIMARY KEY,
                 toggle_name VARCHAR(100) NOT NULL,
                 action VARCHAR(20) NOT NULL,
