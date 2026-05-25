@@ -150,13 +150,6 @@ function ToggleCard({
                     </button>
                 </div>
             </div>
-
-            {name === 'authBypass' && toggle.enabled && toggle.demoUser && (
-                <div className="demo-user-info">
-                    <h4>👤 Demo User Active</h4>
-                    <pre>{JSON.stringify(toggle.demoUser, null, 2)}</pre>
-                </div>
-            )}
         </div>
     );
 }

@@ -64,8 +64,7 @@ import express from 'express';
 import { 
   initToggleClient,
   requireToggle, 
-  attachToggles,
-  checkAuthBypass 
+  attachToggles 
 } from '@confuse/feature-toggle-sdk';
 
 const app = express();
@@ -107,16 +106,6 @@ app.get('/api', (req, res) => {
   res.json({ toggles: req.toggles });
 });
 
-// Check auth bypass for development
-app.use(checkAuthBypass());
-
-app.use((req, res, next) => {
-  if (req.bypassUser) {
-    // Use demo user instead of real authentication
-    req.user = req.bypassUser;
-  }
-  next();
-});
 ```
 
 ### Custom Client Instance
