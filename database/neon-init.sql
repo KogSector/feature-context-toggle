@@ -65,7 +65,6 @@ INSERT INTO feature_toggles.toggles (name, enabled, description, category, categ
  '{"description": "When enabled, uses Docling for superior document layout analysis"}'::jsonb),
 ('useTreeSitterAnalysis', true, 'Enable Tree-sitter for universal code analysis', 'processing', 'userFacing',
  '{"description": "When enabled, uses Tree-sitter for AST-based code understanding"}'::jsonb),
-('useGraphitiGraph', true, 'Route graph operations through Graphiti-powered relation-graph', 'graph', 'ops',
  '{"description": "When enabled, uses the Graphiti temporal knowledge graph"}'::jsonb),
 -- Enterprise infrastructure toggles
 ('useHybridSearch', true, 'Enable hybrid vector + graph search for enhanced results', 'search', 'userFacing',
@@ -82,6 +81,5 @@ INSERT INTO feature_toggles.toggles (name, enabled, description, category, categ
  '{"description": "Rate limits API requests per user/IP to prevent abuse", "requestsPerMinute": 100}'::jsonb),
 -- LLM Control Toggle
 ('enableLLM', false, 'Enable LLM processing for AI-powered features', 'ai', 'devOnly',
- '{"description": "When enabled, allows LLM models to run for semantic analysis, chunking, and entity extraction. Disable to reduce resource usage in development.", "affectedServices": ["unified-processor", "relation-graph", "data-vent"]}'::jsonb)
 ON CONFLICT (name) DO NOTHING;
 
