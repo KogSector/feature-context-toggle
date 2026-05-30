@@ -65,7 +65,7 @@ INSERT INTO feature_toggles.toggles (name, enabled, description, category, categ
  '{"description": "When enabled, uses Docling for superior document layout analysis"}'::jsonb),
 ('useTreeSitterAnalysis', true, 'Enable Tree-sitter for universal code analysis', 'processing', 'userFacing',
  '{"description": "When enabled, uses Tree-sitter for AST-based code understanding"}'::jsonb),
- '{"description": "When enabled, uses the Graphiti temporal knowledge graph"}'::jsonb),
+ '{"description": "When enabled, uses the Graphify temporal knowledge graph"}'::jsonb),
 -- Enterprise infrastructure toggles
 ('useHybridSearch', true, 'Enable hybrid vector + graph search for enhanced results', 'search', 'userFacing',
  '{"description": "Combines vector similarity and knowledge graph traversal for better search relevance"}'::jsonb),
