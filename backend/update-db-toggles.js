@@ -2,8 +2,8 @@ import pg from 'pg';
 import dotenv from 'dotenv';
 import path from 'path';
 
-dotenv.config({ path: path.resolve(process.cwd(), '.env.secret') });
-dotenv.config({ path: path.resolve(process.cwd(), '../.env.secret') });
+dotenv.config({ path: path.resolve(process.cwd(), '.env') });
+dotenv.config({ path: path.resolve(process.cwd(), '../.env') });
 
 const dbUrl = process.env.DATABASE_URL;
 console.log('Using DATABASE_URL:', dbUrl ? 'Found' : 'Not found');
