@@ -103,7 +103,7 @@ export function loadConfig(): Config {
 
     _config = {
         // Server
-        port: getInt('APP_PORT', 3099),
+        port: getInt('FEATURE_TOGGLE_PORT', 3099),
         nodeEnv,
         isProduction: nodeEnv === 'production',
 

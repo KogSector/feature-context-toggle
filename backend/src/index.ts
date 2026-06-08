@@ -21,10 +21,11 @@ const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
 // Try resolving .env files from both current working directory and parent directory
-dotenv.config({ path: path.resolve(process.cwd(), '.env.map') });
-dotenv.config({ path: path.resolve(process.cwd(), '../.env.map') });
-dotenv.config({ path: path.resolve(process.cwd(), '.env.secret') });
+// Try resolving .env files from both current working directory and parent directory
+dotenv.config({ path: path.resolve(process.cwd(), '../.env') });
+dotenv.config({ path: path.resolve(process.cwd(), '../../.env') });
 dotenv.config({ path: path.resolve(process.cwd(), '../.env.secret') });
+dotenv.config({ path: path.resolve(process.cwd(), '../../.env.secret') });
 
 // Load configuration first (validates required env vars)
 logger.info('[STARTUP] Loading configuration...');
