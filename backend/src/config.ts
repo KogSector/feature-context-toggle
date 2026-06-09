@@ -21,7 +21,7 @@ export interface Config {
         port: number;
         name: string;
         user: string;
-        password: string;
+        password?: string;
         schema: string;
         ssl: boolean;
         useContainer: boolean;
@@ -68,18 +68,13 @@ function getRequired(name: string): string {
 }
 
 /**
- * Get optional environment variable with default
- */
-function getOptional(name: string, defaultValue: string): string {
-    return process.env[name] || defaultValue;
-}
-
-/**
  * Get integer environment variable
  */
-function getInt(name: string, defaultValue: number): number {
+function getInt(name: string): number {
     const value = process.env[name];
-    if (!value) return defaultValue;
+    if (!value) {
+        throw new Error(`Missing required integer environment variable: ${name}`);
+    }
     const parsed = parseInt(value, 10);
     if (isNaN(parsed)) {
         throw new Error(`Invalid integer for ${name}: ${value}`);
@@ -99,22 +94,22 @@ let _config: Config | null = null;
 export function loadConfig(): Config {
     if (_config) return _config;
 
-    const nodeEnv = getOptional('NODE_ENV', 'development');
+    const nodeEnv = getRequired('NODE_ENV');
 
     _config = {
         // Server
-        port: getInt('FEATURE_TOGGLE_PORT', 3099),
+        port: getInt('FEATURE_TOGGLE_PORT'),
         nodeEnv,
         isProduction: nodeEnv === 'production',
 
         // Database - supports both container and NeonDB
         db: (() => {
-            let host = getOptional('DB_HOST', 'localhost');
-            let port = getInt('DB_PORT', 5432);
-            let name = getOptional('DB_NAME', 'confuse_shared');
-            let user = getOptional('DB_USER', 'confuse');
-            let password = getOptional('DB_PASSWORD', 'confuse_pg_secret');
-            let ssl = getOptional('DB_SSL', 'false') === 'true';
+            let host = getRequired('DB_HOST');
+            let port = getInt('DB_PORT');
+            let name = getRequired('DB_NAME');
+            let user = getRequired('DB_USER');
+            let password = process.env.DB_PASSWORD; // optional
+            let ssl = process.env.DB_SSL === 'true';
 
             const dbUrl = process.env.DATABASE_URL;
             if (dbUrl) {
@@ -139,34 +134,34 @@ export function loadConfig(): Config {
                 name,
                 user,
                 password,
-                schema: getOptional('DB_SCHEMA', 'public'),
+                schema: getRequired('DB_SCHEMA'),
                 ssl,
                 useContainer: false,
             };
         })(),
 
         // Cache
-        cacheTtlSeconds: getInt('CACHE_TTL_SECONDS', 5),
-        cacheKeyPrefix: getOptional('CACHE_KEY_PREFIX', 'toggle:'),
-        allTogglesKey: getOptional('ALL_TOGGLES_KEY', 'toggles:all'),
+        cacheTtlSeconds: getInt('CACHE_TTL_SECONDS'),
+        cacheKeyPrefix: getRequired('CACHE_KEY_PREFIX'),
+        allTogglesKey: getRequired('ALL_TOGGLES_KEY'),
 
         // CORS
-        corsOrigins: getOptional('CORS_ORIGINS', 'http://localhost:5173,http://localhost:3000').split(','),
+        corsOrigins: getRequired('CORS_ORIGINS').split(','),
 
         // Validation
         validation: {
-            minNameLength: getInt('MIN_NAME_LENGTH', 3),
-            maxNameLength: getInt('MAX_NAME_LENGTH', 50),
-            minDescriptionLength: getInt('MIN_DESCRIPTION_LENGTH', 10),
-            maxDescriptionLength: getInt('MAX_DESCRIPTION_LENGTH', 500),
+            minNameLength: getInt('MIN_NAME_LENGTH'),
+            maxNameLength: getInt('MAX_NAME_LENGTH'),
+            minDescriptionLength: getInt('MIN_DESCRIPTION_LENGTH'),
+            maxDescriptionLength: getInt('MAX_DESCRIPTION_LENGTH'),
         },
 
         // API Limits
         apiLimits: {
-            defaultAuditLimit: getInt('DEFAULT_AUDIT_LIMIT', 100),
-            maxAuditLimit: getInt('MAX_AUDIT_LIMIT', 500),
-            defaultHistoryLimit: getInt('DEFAULT_HISTORY_LIMIT', 50),
-            maxHistoryLimit: getInt('MAX_HISTORY_LIMIT', 200),
+            defaultAuditLimit: getInt('DEFAULT_AUDIT_LIMIT'),
+            maxAuditLimit: getInt('MAX_AUDIT_LIMIT'),
+            defaultHistoryLimit: getInt('DEFAULT_HISTORY_LIMIT'),
+            maxHistoryLimit: getInt('MAX_HISTORY_LIMIT'),
         },
     };
 
