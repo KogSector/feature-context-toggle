@@ -168,7 +168,7 @@ if (response.ok) {
 ## Project Structure
 
 ```
-feature-context-toggle/
+feature-toggle/
 ├── backend/          # Express + TypeScript API
 │   └── src/
 │       ├── index.ts       # Server entry point with extensive logging

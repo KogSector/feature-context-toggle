@@ -1,5 +1,5 @@
 {
-  "name": "feature-context-toggle-backend",
+  "name": "feature-toggle-backend",
   "version": "1.0.0",
   "description": "Backend API for feature toggle management with PostgreSQL and Redis",
   "main": "dist/index.js",

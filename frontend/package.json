@@ -1,5 +1,5 @@
 {
-    "name": "feature-context-toggle-frontend",
+    "name": "feature-toggle-frontend",
     "version": "1.0.0",
     "description": "Feature toggle dashboard UI",
     "type": "module",

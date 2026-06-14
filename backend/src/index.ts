@@ -101,7 +101,7 @@ app.get('/health', async (_req, res) => {
 
     const response: HealthResponse = {
         status,
-        service: 'feature-context-toggle',
+        service: 'feature-toggle',
         version: VERSION,
         timestamp: new Date().toISOString(),
         dependencies: {

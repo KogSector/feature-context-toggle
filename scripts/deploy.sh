@@ -2,7 +2,7 @@
 # =============================================================================
 # Feature-Context-Toggle Service Deployment Script
 # =============================================================================
-# This script builds and deploys the feature-context-toggle service to Kubernetes
+# This script builds and deploys the feature-toggle service to Kubernetes
 # Usage: ./scripts/deploy.sh [--skip-build] [--registry REGISTRY] [--version VERSION]
 # =============================================================================
 
@@ -57,10 +57,10 @@ echo "Namespace: $NAMESPACE"
 # ============================================================================
 if [ "$SKIP_BUILD" = false ]; then
     echo "Building Docker image..."
-    docker build -t "${REGISTRY}/feature-context-toggle:${VERSION}" "$SERVICE_DIR"
+    docker build -t "${REGISTRY}/feature-toggle:${VERSION}" "$SERVICE_DIR"
     
     echo "Pushing Docker image..."
-    docker push "${REGISTRY}/feature-context-toggle:${VERSION}"
+    docker push "${REGISTRY}/feature-toggle:${VERSION}"
 else
     echo "Skipping build step..."
 fi
@@ -94,14 +94,14 @@ kubectl apply -f "$K8S_DIR/service.yaml"
 # Step 4: Wait for Deployment
 # ============================================================================
 echo "Waiting for deployment to be ready..."
-kubectl rollout status deployment/feature-context-toggle -n "$NAMESPACE" --timeout=300s
+kubectl rollout status deployment/feature-toggle -n "$NAMESPACE" --timeout=300s
 
 # ============================================================================
 # Step 5: Verify Deployment
 # ============================================================================
 echo "Verifying deployment..."
-kubectl get pods -l app=feature-context-toggle -n "$NAMESPACE"
-kubectl get services -n "$NAMESPACE" | grep feature-context-toggle
+kubectl get pods -l app=feature-toggle -n "$NAMESPACE"
+kubectl get services -n "$NAMESPACE" | grep feature-toggle
 
 # ============================================================================
 # Step 6: Health Check
@@ -110,7 +110,7 @@ echo "Performing health check..."
 sleep 10
 
 # Check if service is responding
-SERVICE_IP=$(kubectl get service feature-context-toggle -n "$NAMESPACE" -o jsonpath='{.spec.clusterIP}')
+SERVICE_IP=$(kubectl get service feature-toggle -n "$NAMESPACE" -o jsonpath='{.spec.clusterIP}')
 if [ -n "$SERVICE_IP" ] && [ "$SERVICE_IP" != "<none>" ]; then
     echo "✅ Service deployed successfully!"
     echo "Service IP: $SERVICE_IP"
@@ -125,8 +125,8 @@ echo "✅ Feature-Context-Toggle deployment complete!"
 echo ""
 echo "Next steps:"
 echo "1. Test the service: curl http://$SERVICE_IP:3099/health"
-echo "2. View logs: kubectl logs -f deployment/feature-context-toggle -n $NAMESPACE"
+echo "2. View logs: kubectl logs -f deployment/feature-toggle -n $NAMESPACE"
 echo "3. Test feature flags: curl http://$SERVICE_IP:3099/api/v1/features"
-echo "4. Scale if needed: kubectl scale deployment feature-context-toggle --replicas=3 -n $NAMESPACE"
+echo "4. Scale if needed: kubectl scale deployment feature-toggle --replicas=3 -n $NAMESPACE"
 echo ""
 echo "Important: This service provides feature flag management and A/B testing."

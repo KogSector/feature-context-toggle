@@ -1,5 +1,5 @@
 {
-    "name": "feature-context-toggle",
+    "name": "feature-toggle",
     "version": "1.0.0",
     "description": "Developer feature toggle dashboard for ConFuse",
     "private": true,

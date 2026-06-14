@@ -75,7 +75,7 @@ export async function startGrpcServer() {
                 throw err;
             }
 
-            logger.info(`feature-context-toggle gRPC server started on port ${port}`);
+            logger.info(`feature-toggle gRPC server started on port ${port}`);
             server.start();
         }
     );

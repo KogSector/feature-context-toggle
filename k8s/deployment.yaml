@@ -1,27 +1,27 @@
 apiVersion: apps/v1
 kind: Deployment
 metadata:
-  name: feature-context-toggle
+  name: feature-toggle
   namespace: confuse
   labels:
-    app: feature-context-toggle
+    app: feature-toggle
     service: features
     version: v1.0.0
 spec:
   replicas: 2
   selector:
     matchLabels:
-      app: feature-context-toggle
+      app: feature-toggle
   template:
     metadata:
       labels:
-        app: feature-context-toggle
+        app: feature-toggle
         service: features
         version: v1.0.0
     spec:
       containers:
-      - name: feature-context-toggle
-        image: confuseimgr.azurecr.io/feature-context-toggle:v1.0.0
+      - name: feature-toggle
+        image: confuseimgr.azurecr.io/feature-toggle:v1.0.0
         ports:
         - containerPort: 3099
           name: http
@@ -30,17 +30,17 @@ spec:
         - name: PORT
           valueFrom:
             configMapKeyRef:
-              name: feature-context-toggle-config
+              name: feature-toggle-config
               key: PORT
         - name: HOST
           valueFrom:
             configMapKeyRef:
-              name: feature-context-toggle-config
+              name: feature-toggle-config
               key: HOST
         - name: ENVIRONMENT
           valueFrom:
             configMapKeyRef:
-              name: feature-context-toggle-config
+              name: feature-toggle-config
               key: ENVIRONMENT
         
         # Database Configuration (from shared infrastructure)
@@ -96,26 +96,26 @@ spec:
         - name: CORS_ORIGINS
           valueFrom:
             configMapKeyRef:
-              name: feature-context-toggle-config
+              name: feature-toggle-config
               key: CORS_ORIGINS
         
         # Feature Flag Configuration
         - name: DEFAULT_TTL_SECONDS
           valueFrom:
             configMapKeyRef:
-              name: feature-context-toggle-config
+              name: feature-toggle-config
               key: DEFAULT_TTL_SECONDS
         - name: CACHE_SIZE
           valueFrom:
             configMapKeyRef:
-              name: feature-context-toggle-config
+              name: feature-toggle-config
               key: CACHE_SIZE
         
         # Logging
         - name: LOG_LEVEL
           valueFrom:
             configMapKeyRef:
-              name: feature-context-toggle-config
+              name: feature-toggle-config
               key: LOG_LEVEL
         
         resources:

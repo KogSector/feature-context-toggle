@@ -3,13 +3,13 @@
 **
 
 # Allow build context essentials
-!feature-context-toggle/
+!feature-toggle/
 !shared/
 
 # Specific ignores
-feature-context-toggle/node_modules
-feature-context-toggle/dist
-feature-context-toggle/.env
-feature-context-toggle/coverage
+feature-toggle/node_modules
+feature-toggle/dist
+feature-toggle/.env
+feature-toggle/coverage
 shared/node_modules
 shared/dist
