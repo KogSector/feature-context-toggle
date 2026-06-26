@@ -216,6 +216,7 @@ async function start() {
         logger.info('║     🎛️  Feature Context Toggle - Backend Service         ║');
         logger.info('╠══════════════════════════════════════════════════════════╣');
         logger.info(`║  🚀 Server running on http://localhost:${PORT}            ║`);
+        logger.info('║  🌐 Frontend dev at: http://localhost:5173               ║');
         logger.info('║  📊 Toggles API: /api/toggles                            ║');
         logger.info('║  💚 Health check: /health                                ║');
         logger.info('╠══════════════════════════════════════════════════════════╣');
