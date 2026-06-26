@@ -131,7 +131,8 @@ const originalPublicPath = path.join(__dirname, '..', 'public');
 app.use(express.static(originalPublicPath));
 
 // SPA fallback - serve index.html for all non-API routes
-app.get('*', (req, res, next) => {
+app.use((req, res, next) => {
+    if (req.method !== 'GET') return next();
     // Skip API routes
     if (req.path.startsWith('/api') || req.path === '/health') {
         return next();
