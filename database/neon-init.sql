@@ -53,33 +53,10 @@ CREATE INDEX IF NOT EXISTS idx_audit_changed_at ON feature_toggles.audit_log(cha
 
 -- Insert default feature toggles
 INSERT INTO feature_toggles.toggles (name, enabled, description, category, category_type, metadata) VALUES
-('debugLogging', false, 'Enable verbose debug logging across all services', 'debugging', 'devOnly', '{}'::jsonb),
-('skipRateLimiting', false, 'Disable rate limiting for API endpoints during testing', 'performance', 'devOnly', '{}'::jsonb),
-('useSharedDatabase', true, 'Use shared database for all services in dev environment', 'database', 'ops', '{}'::jsonb),
-('enableDistributedTracing', true, 'Enable OpenTelemetry distributed tracing', 'observability', 'ops', '{}'::jsonb),
-('advancedSearch', true, 'Enable advanced search features in the application', 'features', 'userFacing', '{}'::jsonb),
--- New toggles for platform transformation
-('useUnifiedProcessor', true, 'Route processing through unified-processor (CocoIndex) service', 'processing', 'ops',
- '{"description": "When enabled, uses the new unified-processor for all document and code processing"}'::jsonb),
-('useDoclingProcessing', true, 'Enable Docling for advanced document parsing (PDF, DOCX, HTML)', 'processing', 'userFacing',
- '{"description": "When enabled, uses Docling for superior document layout analysis"}'::jsonb),
-('useTreeSitterAnalysis', true, 'Enable Tree-sitter for universal code analysis', 'processing', 'userFacing',
- '{"description": "When enabled, uses Tree-sitter for AST-based code understanding"}'::jsonb),
- '{"description": "When enabled, uses the Graphify temporal knowledge graph"}'::jsonb),
--- Enterprise infrastructure toggles
-('useHybridSearch', true, 'Enable hybrid vector + graph search for enhanced results', 'search', 'userFacing',
- '{"description": "Combines vector similarity and knowledge graph traversal for better search relevance"}'::jsonb),
-('useCircuitBreaker', true, 'Enable circuit breaker pattern for service resilience', 'reliability', 'ops',
- '{"description": "Automatically fails fast when downstream services are unhealthy", "threshold": 5, "timeout": 30000}'::jsonb),
-('useKafkaEvents', false, 'Route async operations through Kafka message queue', 'messaging', 'ops',
- '{"description": "When enabled, publishes processing events to Kafka topics for async handling"}'::jsonb),
-('enablePrometheusMetrics', true, 'Expose Prometheus metrics endpoints on all services', 'observability', 'ops',
- '{"description": "When enabled, exposes /metrics endpoint for Prometheus scraping"}'::jsonb),
-('enableHealthChecks', true, 'Enable detailed health check endpoints', 'observability', 'ops',
- '{"description": "Provides /health and /health/live endpoints for container orchestration"}'::jsonb),
-('enableRateLimiting', true, 'Enable API rate limiting in production', 'security', 'ops',
- '{"description": "Rate limits API requests per user/IP to prevent abuse", "requestsPerMinute": 100}'::jsonb),
--- LLM Control Toggle
-('enableLLM', false, 'Enable LLM processing for AI-powered features', 'ai', 'devOnly',
+('enableRepositories', true, 'Enable repositories pipeline and feature', 'features', 'userFacing', '{}'::jsonb),
+('enableDocuments', true, 'Enable documents pipeline and feature', 'features', 'userFacing', '{}'::jsonb),
+('enableURLs', false, 'Enable URLs pipeline and feature', 'features', 'userFacing', '{}'::jsonb),
+('enableChats', false, 'Enable chats pipeline and feature', 'features', 'userFacing', '{}'::jsonb),
+('enableDesign', false, 'Enable design options feature', 'features', 'userFacing', '{}'::jsonb)
 ON CONFLICT (name) DO NOTHING;
 

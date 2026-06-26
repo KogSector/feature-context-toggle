@@ -19,15 +19,26 @@ async function run() {
     console.log('Connected to database. Setting search_path...');
     await client.query('SET search_path TO feature_toggles, public');
     
-    console.log('Checking existing toggles...');
-    const res = await client.query("SELECT name, enabled FROM toggles WHERE name IN ('hideOnboarding', 'hideSwitchUse')");
-    console.log('Current values:', res.rows);
+    console.log('Deleting obsolete toggles...');
+    await client.query("DELETE FROM toggles");
     
-    console.log('Updating toggles...');
-    const updateRes = await client.query(
-      "UPDATE toggles SET enabled = true WHERE name IN ('hideOnboarding', 'hideSwitchUse') RETURNING name, enabled"
-    );
-    console.log('Updated values:', updateRes.rows);
+    console.log('Inserting new toggles...');
+    const insertQuery = `
+      INSERT INTO toggles (name, enabled, description, category, category_type, metadata) VALUES
+      ('enableRepositories', true, 'Enable repositories pipeline and feature', 'features', 'userFacing', '{}'::jsonb),
+      ('enableDocuments', true, 'Enable documents pipeline and feature', 'features', 'userFacing', '{}'::jsonb),
+      ('enableURLs', false, 'Enable URLs pipeline and feature', 'features', 'userFacing', '{}'::jsonb),
+      ('enableChats', false, 'Enable chats pipeline and feature', 'features', 'userFacing', '{}'::jsonb),
+      ('enableDesign', false, 'Enable design options feature', 'features', 'userFacing', '{}'::jsonb)
+      ON CONFLICT (name) DO UPDATE SET 
+        enabled = EXCLUDED.enabled,
+        description = EXCLUDED.description,
+        category = EXCLUDED.category,
+        category_type = EXCLUDED.category_type
+      RETURNING name, enabled
+    `;
+    const updateRes = await client.query(insertQuery);
+    console.log('Inserted/Updated toggles:', updateRes.rows);
     
   } catch (err) {
     console.error('Error running update:', err);

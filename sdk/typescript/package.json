@@ -25,9 +25,12 @@
     ],
     "author": "ConFuse Team",
     "license": "MIT",
-    "dependencies": {},
+    "dependencies": {
+        "pg": "^8.22.0"
+    },
     "devDependencies": {
         "@types/node": "^26.0.0",
+        "@types/pg": "^8.20.0",
         "typescript": "^6.0.3"
     },
     "peerDependencies": {

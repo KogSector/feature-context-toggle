@@ -40,10 +40,10 @@ export interface ApiResponse<T = unknown> {
 
 export interface ToggleClientConfig {
     /**
-     * Base URL of the feature toggle service
-     * @default 'http://localhost:3099'
+     * PostgreSQL database connection string
+     * e.g., 'postgresql://user:password@localhost:5432/confuse_shared'
      */
-    serviceUrl: string;
+    databaseUrl?: string;
 
     /**
      * Cache TTL in milliseconds
@@ -52,25 +52,25 @@ export interface ToggleClientConfig {
     cacheTtlMs?: number;
 
     /**
-     * Request timeout in milliseconds
+     * Request timeout in milliseconds (legacy, kept for backwards compatibility but not used by pg pool directly)
      * @default 2000 (2 seconds)
      */
     timeoutMs?: number;
 
     /**
-     * Number of retry attempts on failure
+     * Number of retry attempts on failure (legacy)
      * @default 2
      */
     retryAttempts?: number;
 
     /**
-     * Delay between retries in milliseconds
+     * Delay between retries in milliseconds (legacy)
      * @default 500
      */
     retryDelayMs?: number;
 
     /**
-     * Service name for audit logging (sent as X-Service-Name header)
+     * Service name for audit logging
      */
     serviceName?: string;
 

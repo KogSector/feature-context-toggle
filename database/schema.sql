@@ -86,53 +86,14 @@ CREATE TRIGGER trigger_update_updated_at
     EXECUTE FUNCTION public.update_updated_at();
 
 -- =============================================================================
--- Default Toggles - Authentication & Security
+-- Default Toggles - Product Features
 -- =============================================================================
 INSERT INTO public.toggles (name, enabled, description, category, category_type, metadata) VALUES
-('oauthProviders', true, 'Enable OAuth login options (Google, GitHub, etc.)', 'authentication', 'userFacing', '{}'::jsonb),
-('mfaRequired', false, 'Force multi-factor authentication for all users', 'authentication', 'ops', '{}'::jsonb),
-('sessionTimeout', true, 'Enable automatic session expiry after inactivity', 'authentication', 'ops', '{"timeoutMinutes": 60}'::jsonb),
-('apiRateLimiting', true, 'Rate limit API requests per user/IP', 'authentication', 'ops', '{"requestsPerMinute": 100}'::jsonb)
-ON CONFLICT (name) DO NOTHING;
-
--- =============================================================================
--- Default Toggles - Data Processing
--- =============================================================================
-INSERT INTO public.toggles (name, enabled, description, category, category_type, metadata) VALUES
-('chunkingEnabled', true, 'Enable document chunking for processing', 'data', 'ops', '{"maxChunkSize": 1000}'::jsonb),
-('embeddingCache', true, 'Cache vector embeddings for faster retrieval', 'data', 'ops', '{"ttlHours": 24}'::jsonb),
-('dataRetention', true, 'Auto-purge old data based on retention policy', 'data', 'ops', '{"retentionDays": 90}'::jsonb),
-('asyncProcessing', true, 'Enable background job processing for heavy tasks', 'data', 'ops', '{}'::jsonb)
-ON CONFLICT (name) DO NOTHING;
-
--- =============================================================================
--- Default Toggles - Infrastructure
--- =============================================================================
-INSERT INTO public.toggles (name, enabled, description, category, category_type, metadata) VALUES
-('useSharedDatabase', true, 'Use shared PostgreSQL database for all services', 'infrastructure', 'ops', '{}'::jsonb),
-('distributedTracing', true, 'Enable OpenTelemetry distributed tracing', 'infrastructure', 'ops', '{}'::jsonb),
-('loadBalancing', false, 'Enable load balancer for horizontal scaling', 'infrastructure', 'ops', '{}'::jsonb),
-('cachingEnabled', true, 'Enable Redis caching layer for performance', 'infrastructure', 'ops', '{}'::jsonb),
-('cdnEnabled', false, 'Enable CDN for static asset delivery', 'infrastructure', 'ops', '{}'::jsonb)
-ON CONFLICT (name) DO NOTHING;
-
--- =============================================================================
--- Default Toggles - Development & Debugging
--- =============================================================================
-INSERT INTO public.toggles (name, enabled, description, category, category_type, metadata) VALUES
-('debugLogging', false, 'Enable verbose debug logging across all services', 'debugging', 'devOnly', '{}'::jsonb),
-('skipRateLimiting', false, 'Disable rate limiting for API endpoints during testing', 'debugging', 'devOnly', '{}'::jsonb),
-('mockExternalServices', false, 'Mock external API calls for isolated testing', 'debugging', 'devOnly', '{}'::jsonb),
-('profilingEnabled', false, 'Enable performance profiling and metrics collection', 'debugging', 'devOnly', '{}'::jsonb),
-('featureFlags', true, 'Enable A/B testing framework for experiments', 'debugging', 'userFacing', '{}'::jsonb)
-ON CONFLICT (name) DO NOTHING;
-
--- =============================================================================
--- Default Toggles - User Interface
--- =============================================================================
-INSERT INTO public.toggles (name, enabled, description, category, category_type, metadata) VALUES
-('hideOnboarding', true, 'Hide the initial onboarding screen for new users', 'ui', 'userFacing', '{}'::jsonb),
-('hideSwitchUse', true, 'Hide the Switch Use button in the dashboard', 'ui', 'userFacing', '{}'::jsonb)
+('enableRepositories', true, 'Enable repositories pipeline and feature', 'features', 'userFacing', '{}'::jsonb),
+('enableDocuments', true, 'Enable documents pipeline and feature', 'features', 'userFacing', '{}'::jsonb),
+('enableURLs', false, 'Enable URLs pipeline and feature', 'features', 'userFacing', '{}'::jsonb),
+('enableChats', false, 'Enable chats pipeline and feature', 'features', 'userFacing', '{}'::jsonb),
+('enableDesign', false, 'Enable design options feature', 'features', 'userFacing', '{}'::jsonb)
 ON CONFLICT (name) DO NOTHING;
 
 -- =============================================================================

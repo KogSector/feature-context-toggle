@@ -5,11 +5,12 @@
  * Includes automatic caching, retry logic, and graceful fallbacks.
  */
 
+import pg from 'pg';
+
 import type {
     ToggleClientConfig,
     FeatureToggle,
     ToggleState,
-    ApiResponse,
 } from './types.js';
 
 // =============================================================================
@@ -26,15 +27,17 @@ interface CacheEntry<T> {
 // =============================================================================
 
 export class ToggleClient {
-    private config: Required<Omit<ToggleClientConfig, 'onServiceUnavailable'>> & {
+    private config: Required<Omit<ToggleClientConfig, 'onServiceUnavailable' | 'databaseUrl'>> & {
+        databaseUrl?: string;
         onServiceUnavailable?: (error: Error) => void;
     };
     private cache: Map<string, CacheEntry<unknown>> = new Map();
     private allTogglesCache: CacheEntry<ToggleState> | null = null;
+    private pool: pg.Pool | null = null;
 
     constructor(config: ToggleClientConfig) {
         this.config = {
-            serviceUrl: config.serviceUrl,
+            databaseUrl: config.databaseUrl,
             cacheTtlMs: config.cacheTtlMs ?? 5000,
             timeoutMs: config.timeoutMs ?? 2000,
             retryAttempts: config.retryAttempts ?? 2,
@@ -43,6 +46,24 @@ export class ToggleClient {
             defaultEnabled: config.defaultEnabled ?? false,
             onServiceUnavailable: config.onServiceUnavailable,
         };
+
+        const dbUrl = this.config.databaseUrl || process.env.DATABASE_URL;
+        if (dbUrl) {
+            this.pool = new pg.Pool({
+                connectionString: dbUrl,
+                // Short timeout for connections to avoid hanging
+                connectionTimeoutMillis: this.config.timeoutMs,
+                // Don't keep too many idle connections open for a simple feature toggle SDK
+                max: 5,
+            });
+            
+            // Prevent unhandled rejections on idle connection errors
+            this.pool.on('error', (err) => {
+                console.warn(`[FeatureToggle] Unexpected database pool error: ${err.message}`);
+            });
+        } else {
+            console.warn('[FeatureToggle] No DATABASE_URL provided. Feature toggle SDK will use default values.');
+        }
     }
 
     // =========================================================================
@@ -62,34 +83,30 @@ export class ToggleClient {
      */
     async getToggle(toggleName: string): Promise<FeatureToggle | null> {
         const cacheKey = `toggle:${toggleName}`;
-        // Check cache first
         const cached = this.getCached<FeatureToggle>(cacheKey);
         if (cached !== null) {
             return cached;
         }
 
+        if (!this.pool) {
+            return this.fallbackToStaleCache(cacheKey);
+        }
+
         try {
-            const response = await this.fetchWithRetry<ApiResponse<FeatureToggle>>(
-                `/api/toggles/${encodeURIComponent(toggleName)}`
+            const result = await this.pool.query(
+                'SELECT name, enabled, description, category, category_type as "categoryType", metadata FROM public.toggles WHERE name = $1',
+                [toggleName]
             );
 
-            if (response.success && response.data) {
-                this.setCache(cacheKey, response.data);
-                return response.data;
+            if (result.rows.length > 0) {
+                const toggle = result.rows[0] as FeatureToggle;
+                this.setCache(cacheKey, toggle);
+                return toggle;
             }
-
             return null;
         } catch (error) {
             this.handleError(error as Error);
-            
-            // Fallback to stale cache if available
-            const staleCache = this.getStaleCached<FeatureToggle>(cacheKey);
-            if (staleCache !== null) {
-                console.warn(`[FeatureToggle] Using stale cache for toggle: ${toggleName}`);
-                return staleCache;
-            }
-            
-            return null;
+            return this.fallbackToStaleCache(cacheKey);
         }
     }
 
@@ -97,34 +114,41 @@ export class ToggleClient {
      * Get all toggles
      */
     async getAllToggles(): Promise<ToggleState> {
-        // Check cache first
         if (this.allTogglesCache && Date.now() < this.allTogglesCache.expiresAt) {
             return this.allTogglesCache.data;
         }
 
-        try {
-            const response = await this.fetchWithRetry<ApiResponse<ToggleState>>(
-                '/api/toggles'
-            );
-
-            if (response.success && response.data) {
-                this.allTogglesCache = {
-                    data: response.data,
-                    expiresAt: Date.now() + this.config.cacheTtlMs,
-                };
-                return response.data;
-            }
-
-            return {};
-        } catch (error) {
-            this.handleError(error as Error);
-            
-            // Fallback to stale cache if available
+        if (!this.pool) {
             if (this.allTogglesCache) {
                 console.warn(`[FeatureToggle] Using stale cache for all toggles`);
                 return this.allTogglesCache.data;
             }
+            return {};
+        }
+
+        try {
+            const result = await this.pool.query(
+                'SELECT name, enabled, description, category, category_type as "categoryType", metadata FROM public.toggles'
+            );
+
+            const state: ToggleState = {};
+            for (const row of result.rows) {
+                const { name, ...rest } = row;
+                state[name] = rest as Omit<FeatureToggle, 'name'>;
+            }
+
+            this.allTogglesCache = {
+                data: state,
+                expiresAt: Date.now() + this.config.cacheTtlMs,
+            };
             
+            return state;
+        } catch (error) {
+            this.handleError(error as Error);
+            if (this.allTogglesCache) {
+                console.warn(`[FeatureToggle] Using stale cache for all toggles`);
+                return this.allTogglesCache.data;
+            }
             return {};
         }
     }
@@ -139,31 +163,29 @@ export class ToggleClient {
             return cached;
         }
 
+        if (!this.pool) {
+            return this.fallbackToStaleCache(cacheKey) || {};
+        }
+
         try {
-            const response = await this.fetchWithRetry<ApiResponse<ToggleState>>(
-                `/api/toggles?category=${encodeURIComponent(category)}`
+            const result = await this.pool.query(
+                'SELECT name, enabled, description, category, category_type as "categoryType", metadata FROM public.toggles WHERE category = $1',
+                [category]
             );
 
-            if (response.success && response.data) {
-                this.setCache(cacheKey, response.data);
-                return response.data;
+            const state: ToggleState = {};
+            for (const row of result.rows) {
+                const { name, ...rest } = row;
+                state[name] = rest as Omit<FeatureToggle, 'name'>;
             }
 
-            return {};
+            this.setCache(cacheKey, state);
+            return state;
         } catch (error) {
             this.handleError(error as Error);
-            
-            // Fallback to stale cache if available
-            const staleCache = this.getStaleCached<ToggleState>(cacheKey);
-            if (staleCache !== null) {
-                console.warn(`[FeatureToggle] Using stale cache for category: ${category}`);
-                return staleCache;
-            }
-            
-            return {};
+            return this.fallbackToStaleCache(cacheKey) || {};
         }
     }
-
 
     /**
      * Check multiple toggles at once
@@ -199,6 +221,16 @@ export class ToggleClient {
         this.allTogglesCache = null;
     }
 
+    /**
+     * Close the database pool cleanly
+     */
+    async close(): Promise<void> {
+        if (this.pool) {
+            await this.pool.end();
+            this.pool = null;
+        }
+    }
+
     // =========================================================================
     // Private Methods
     // =========================================================================
@@ -208,14 +240,16 @@ export class ToggleClient {
         if (entry && Date.now() < entry.expiresAt) {
             return entry.data;
         }
-        // Note: We deliberately do not delete the cache entry here so it can be used 
-        // as a stale fallback if the API request fails.
         return null;
     }
 
-    private getStaleCached<T>(key: string): T | null {
+    private fallbackToStaleCache<T>(key: string): T | null {
         const entry = this.cache.get(key) as CacheEntry<T> | undefined;
-        return entry ? entry.data : null;
+        if (entry) {
+            console.warn(`[FeatureToggle] Using stale cache for: ${key}`);
+            return entry.data;
+        }
+        return null;
     }
 
     private setCache<T>(key: string, data: T): void {
@@ -225,44 +259,8 @@ export class ToggleClient {
         });
     }
 
-    private async fetchWithRetry<T>(path: string, attempt: number = 1): Promise<T> {
-        const url = `${this.config.serviceUrl}${path}`;
-
-        try {
-            const controller = new AbortController();
-            const timeoutId = setTimeout(() => controller.abort(), this.config.timeoutMs);
-
-            const response = await fetch(url, {
-                method: 'GET',
-                headers: {
-                    'Content-Type': 'application/json',
-                    'X-Service-Name': this.config.serviceName,
-                },
-                signal: controller.signal,
-            });
-
-            clearTimeout(timeoutId);
-
-            if (!response.ok) {
-                throw new Error(`HTTP ${response.status}: ${response.statusText}`);
-            }
-
-            return await response.json() as T;
-        } catch (error) {
-            if (attempt < this.config.retryAttempts) {
-                await this.delay(this.config.retryDelayMs * attempt);
-                return this.fetchWithRetry(path, attempt + 1);
-            }
-            throw error;
-        }
-    }
-
-    private delay(ms: number): Promise<void> {
-        return new Promise(resolve => setTimeout(resolve, ms));
-    }
-
     private handleError(error: Error): void {
-        console.warn(`[FeatureToggle] Service unavailable: ${error.message}`);
+        console.warn(`[FeatureToggle] Database connection issue: ${error.message}`);
         if (this.config.onServiceUnavailable) {
             this.config.onServiceUnavailable(error);
         }
@@ -273,40 +271,32 @@ export class ToggleClient {
 // Factory Function
 // =============================================================================
 
-/**
- * Create a new ToggleClient instance
- */
-export function createToggleClient(config: ToggleClientConfig): ToggleClient {
+export function createToggleClient(config: ToggleClientConfig = {}): ToggleClient {
     return new ToggleClient(config);
 }
 
 // =============================================================================
-// Singleton Pattern (Optional)
+// Singleton Pattern
 // =============================================================================
 
 let defaultClient: ToggleClient | null = null;
 
-/**
- * Initialize the default toggle client
- */
-export function initToggleClient(config: ToggleClientConfig): ToggleClient {
+export function initToggleClient(config: ToggleClientConfig = {}): ToggleClient {
+    if (defaultClient) {
+        defaultClient.close().catch(console.error);
+    }
     defaultClient = new ToggleClient(config);
     return defaultClient;
 }
 
-/**
- * Get the default toggle client (must be initialized first)
- */
 export function getToggleClient(): ToggleClient {
     if (!defaultClient) {
-        throw new Error('Toggle client not initialized. Call initToggleClient() first.');
+        // Auto-initialize if not done explicitly, using env variables
+        defaultClient = new ToggleClient({});
     }
     return defaultClient;
 }
 
-/**
- * Check if a toggle is enabled using the default client
- */
 export async function isToggleEnabled(toggleName: string): Promise<boolean> {
     return getToggleClient().isEnabled(toggleName);
 }
