@@ -37,26 +37,7 @@ const format = winston.format.combine(
 const transports = [
     new winston.transports.Console({
         format, // Use colorized format for console
-    }),
-    new winston.transports.File({
-        filename: path.join(logDir, 'error.log'),
-        level: 'error',
-        format: winston.format.combine(
-            winston.format.uncolorize(),
-            winston.format.json()
-        ),
-        maxsize: 5242880, // 5MB
-        maxFiles: 5,
-    }),
-    new winston.transports.File({
-        filename: path.join(logDir, 'feature-toggle.log'),
-        format: winston.format.combine(
-            winston.format.uncolorize(),
-            winston.format.json()
-        ),
-        maxsize: 10485760, // 10MB
-        maxFiles: 5,
-    }),
+    })
 ];
 
 export const logger = winston.createLogger({
