@@ -1,4 +1,4 @@
-# Feature Context Toggle
+# Feature Toggle
 
 Developer feature toggle dashboard for the ConFuse platform. This is a private dev tool for controlling features, bypassing authentication during testing, and enabling debug modes.
 
@@ -193,7 +193,7 @@ feature-toggle/
 The backend includes extensive structured logging for debugging and monitoring:
 
 ```
-[STARTUP] Feature Context Toggle Service Starting...
+[STARTUP] Feature Toggle Service Starting...
 [DATABASE] 📦 Database: NeonDB @ host:5432
 [CACHE] ✅ Redis cache connected
 [REQUEST] [req_xxx] GET /api/toggles started

@@ -1,4 +1,4 @@
--- NeonDB Schema Initialization for Feature Context Toggle
+-- NeonDB Schema Initialization for Feature Toggle
 -- Run this script to set up the feature_toggles schema in NeonDB
 
 -- Create feature_toggles schema

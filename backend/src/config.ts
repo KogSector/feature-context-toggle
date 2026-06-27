@@ -1,5 +1,5 @@
 /**
- * Feature Context Toggle - Configuration Module
+ * Feature Toggle - Configuration Module
  * 
  * Centralized configuration loader with environment variable validation.
  * All configuration values are loaded from environment variables.

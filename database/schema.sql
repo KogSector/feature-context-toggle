@@ -1,5 +1,5 @@
 -- =============================================================================
--- Feature Context Toggle - Database Schema
+-- Feature Toggle - Database Schema
 -- =============================================================================
 -- This schema is part of the shared database (confuse_shared)
 -- Run: psql -h localhost -U confuse -d confuse_shared -f schema.sql

@@ -1,5 +1,5 @@
 /**
- * Feature Context Toggle - In-Memory Cache Layer
+ * Feature Toggle - In-Memory Cache Layer
  * 
  * Provides high-performance in-memory caching for toggle reads with automatic
  * invalidation on updates. No external dependencies required.

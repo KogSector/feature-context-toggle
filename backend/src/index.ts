@@ -1,5 +1,5 @@
 /**
- * Feature Context Toggle - Backend Entry Point
+ * Feature Toggle - Backend Entry Point
  * 
  * Express server for managing feature toggles with PostgreSQL and in-memory caching.
  */
@@ -181,14 +181,14 @@ app.use((err: Error, _req: express.Request, res: express.Response, _next: expres
 // =============================================================================
 async function start() {
     logger.info('[STARTUP] ==================================================');
-    logger.info('[STARTUP] Feature Context Toggle Service Starting...');
+    logger.info('[STARTUP] Feature Toggle Service Starting...');
     logger.info('[STARTUP] ==================================================');
     logger.info(`[STARTUP] Timestamp: ${new Date().toISOString()}`);
     logger.info(`[STARTUP] Node version: ${process.version}`);
     logger.info(`[STARTUP] Environment: ${appConfig.nodeEnv}`);
     logger.info('');
     logger.info('╔══════════════════════════════════════════════════════════╗');
-    logger.info('║     🎛️  Feature Context Toggle - Starting...             ║');
+    logger.info('║     🎛️  Feature Toggle - Starting...             ║');
     logger.info('╚══════════════════════════════════════════════════════════╝');
     logger.info('');
 
@@ -214,7 +214,7 @@ async function start() {
     app.listen(PORT, () => {
         logger.info('');
         logger.info('╔══════════════════════════════════════════════════════════╗');
-        logger.info('║     🎛️  Feature Context Toggle - Backend Service         ║');
+        logger.info('║     🎛️  Feature Toggle - Backend Service         ║');
         logger.info('╠══════════════════════════════════════════════════════════╣');
         logger.info(`║  🚀 Server running on http://localhost:${PORT}            ║`);
         logger.info('║  🌐 Frontend dev at: http://localhost:5173               ║');

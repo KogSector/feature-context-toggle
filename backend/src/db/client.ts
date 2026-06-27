@@ -1,5 +1,5 @@
 /**
- * Feature Context Toggle - Database Manager
+ * Feature Toggle - Database Manager
  * 
  * PostgreSQL database manager with connection pooling, initialization,
  * and audit logging support.

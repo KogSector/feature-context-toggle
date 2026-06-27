@@ -1,5 +1,5 @@
 /**
- * Feature Context Toggle - Type Definitions
+ * Feature Toggle - Type Definitions
  */
 
 // =============================================================================

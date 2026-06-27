@@ -337,7 +337,7 @@ function AuditLog({ entries }: { entries: AuditEntry[] }) {
  */
 function App() {
     console.log('[FRONTEND] App component mounting...');
-    
+
     const [toggles, setToggles] = useState<ToggleState | null>(null);
     const [auditLog, setAuditLog] = useState<AuditEntry[]>([]);
     const [loading, setLoading] = useState(true);
@@ -358,7 +358,7 @@ function App() {
             setError(null);
             const response = await fetch(API_BASE);
             console.log('[FRONTEND] Response status:', response.status);
-            
+
             const data: ApiResponse<ToggleState> = await response.json();
             console.log('[FRONTEND] Response data:', data);
 
@@ -536,18 +536,18 @@ function App() {
         ? Object.values(toggles).filter(t => t.enabled).length
         : 0;
 
-    console.log('[FRONTEND] Rendering App, state:', { 
-        loading, 
-        error, 
+    console.log('[FRONTEND] Rendering App, state:', {
+        loading,
+        error,
         togglesCount: toggles ? Object.keys(toggles).length : 0,
         enabledCount
     });
-    
+
     return (
         <div className="app">
             <header className="header">
                 <span className="header-icon">🎛️</span>
-                <h1>Feature Context Toggle</h1>
+                <h1>Feature Toggle</h1>
                 <p>Developer dashboard for ConFuse platform</p>
                 <div className="header-badge">
                     {enabledCount} toggle{enabledCount !== 1 ? 's' : ''} active
@@ -663,7 +663,7 @@ function App() {
             </main>
 
             <footer className="footer">
-                <p>Feature Context Toggle v1.0.0 • ConFuse Dev Tools</p>
+                <p>Feature Toggle v1.0.0 • ConFuse Dev Tools</p>
                 <p>This is a private developer tool - not for end users</p>
             </footer>
         </div>

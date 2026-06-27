@@ -1,5 +1,5 @@
 /**
- * Feature Context Toggle - Validation Module
+ * Feature Toggle - Validation Module
  * 
  * Validates toggle inputs and enforces naming conventions.
  */

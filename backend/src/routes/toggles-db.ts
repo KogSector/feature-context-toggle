@@ -1,5 +1,5 @@
 /**
- * Feature Context Toggle - Toggle Routes (Database Version)
+ * Feature Toggle - Toggle Routes (Database Version)
  * 
  * REST API for managing feature toggles using PostgreSQL with Redis caching.
  */
