@@ -94,7 +94,7 @@ let _config: Config | null = null;
 export function loadConfig(): Config {
     if (_config) return _config;
 
-    const nodeEnv = getRequired('NODE_ENV');
+    const nodeEnv = process.env.NODE_ENV || 'development';
 
     _config = {
         // Server
