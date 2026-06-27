@@ -68,28 +68,6 @@ app.use(express.json());
 // =============================================================================
 // Request Logging
 // =============================================================================
-app.use((req, res, next) => {
-    const start = Date.now();
-    const requestId = `req_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
-    logger.http(`[REQUEST] [${requestId}] ${req.method} ${req.path} started`, {
-        query: req.query,
-        headers: { 'content-type': req.headers['content-type'], 'x-service-name': req.headers['x-service-name'] },
-        ip: req.ip,
-    });
-    res.on('finish', () => {
-        const duration = Date.now() - start;
-        const level = res.statusCode >= 400 ? 'error' : 'info';
-        const msg = `[RESPONSE] [${requestId}] ${req.method} ${req.path} ${res.statusCode} ${duration}ms`;
-        if (level === 'error') {
-            logger.error(msg);
-        } else {
-            logger.http(msg);
-        }
-    });
-    next();
-});
-
-// =============================================================================
 // Health Check
 // =============================================================================
 app.get('/health', async (_req, res) => {
@@ -214,19 +192,7 @@ async function start() {
 
     // Start server
     app.listen(PORT, () => {
-        logger.info('');
-        logger.info('╔══════════════════════════════════════════════════════════╗');
-        logger.info('║     🎛️  Feature Toggle - Backend Service         ║');
-        logger.info('╠══════════════════════════════════════════════════════════╣');
-        logger.info(`║  🚀 Server running on http://localhost:${PORT}            ║`);
-        logger.info('║  🌐 Frontend dev at: http://localhost:5173               ║');
-        logger.info('║  📊 Toggles API: /api/toggles                            ║');
-        logger.info('║  💚 Health check: /health                                ║');
-        logger.info('╠══════════════════════════════════════════════════════════╣');
-        logger.info(`║  📦 Database: ${dbReady ? '✅ Connected' : '❌ Unavailable'}                           ║`);
-        logger.info(`║  🔴 Cache: ${cacheReady ? '✅ Connected' : '❌ Unavailable'}                              ║`);
-        logger.info('╚══════════════════════════════════════════════════════════╝');
-        logger.info('');
+        logger.info(`🚀 Server running on http://localhost:${PORT}`);
     });
 }
 

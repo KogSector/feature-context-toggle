@@ -10,7 +10,7 @@ export default defineConfig(({ mode }) => {
             port: parseInt(env.VITE_PORT || '5173'),
             proxy: {
                 '/api': {
-                    target: env.VITE_BACKEND_URL || 'http://localhost:3011',
+                    target: env.VITE_BACKEND_URL || 'http://127.0.0.1:3099',
                     changeOrigin: true,
                 },
             },

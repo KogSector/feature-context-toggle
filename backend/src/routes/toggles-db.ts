@@ -72,16 +72,16 @@ function toToggleState(toggles: Toggle[]): ToggleState {
 // GET /api/toggles - Get all toggles
 // =============================================================================
 router.get('/', async (req: Request, res: Response) => {
-    console.log('[ROUTE] GET /api/toggles - Fetching all toggles', { category: req.query.category, categoryType: req.query.categoryType, format: req.query.format });
+
     try {
         const { category, categoryType, format } = req.query;
 
         // Try cache first (only for unfiltered requests)
         if (!category && !categoryType) {
-            console.log('[ROUTE] GET /api/toggles - Checking cache for unfiltered request');
+
             const cached = await cache.getAllToggles();
             if (cached) {
-                console.log(`[ROUTE] GET /api/toggles - Cache hit, returning ${cached.length} toggles`);
+
                 const togglesObj = toToggleState(cached);
                 const arrayFormat = cached.map(toApiFormat);
                 return res.json({
@@ -95,12 +95,11 @@ router.get('/', async (req: Request, res: Response) => {
         }
 
         // Fetch from database
-        console.log('[ROUTE] GET /api/toggles - Fetching from database');
+
         const toggles = await getDb().getAllToggles(
             category as string | undefined,
             categoryType as string | undefined
         );
-        console.log(`[ROUTE] GET /api/toggles - Database returned ${toggles.length} toggles`);
 
         // Cache if unfiltered
         if (!category && !categoryType) {
@@ -133,13 +132,13 @@ router.get('/', async (req: Request, res: Response) => {
 // GET /api/toggles/categories - Get unique categories
 // =============================================================================
 router.get('/categories', async (_req: Request, res: Response) => {
-    console.log('[ROUTE] GET /api/toggles/categories - Fetching categories');
+
     try {
         const toggles = await getDb().getAllToggles();
         const categories = [...new Set(toggles.map(t => t.category))];
         const categoryTypes = [...new Set(toggles.map(t => t.category_type))];
 
-        console.log('[ROUTE] GET /api/toggles/categories - Returning categories', { categories, categoryTypes });
+
         res.json({
             success: true,
             data: { categories, categoryTypes },
@@ -159,12 +158,11 @@ router.get('/categories', async (_req: Request, res: Response) => {
 // GET /api/toggles/audit - Get recent audit log
 // =============================================================================
 router.get('/audit', async (req: Request, res: Response) => {
-    console.log('[ROUTE] GET /api/toggles/audit - Fetching audit log', { limit: req.query.limit });
+
     try {
         const config = getConfig();
         const limit = parseInt(req.query.limit as string) || config.apiLimits.defaultAuditLimit;
         const auditLog = await getDb().getRecentAuditLog(Math.min(limit, config.apiLimits.maxAuditLimit));
-        console.log(`[ROUTE] GET /api/toggles/audit - Returning ${auditLog.length} audit entries`);
 
         res.json({
             success: true,
@@ -187,14 +185,14 @@ router.get('/audit', async (req: Request, res: Response) => {
 // =============================================================================
 router.get('/:name', async (req: Request, res: Response) => {
     const { name } = req.params;
-    console.log(`[ROUTE] GET /api/toggles/${name} - Fetching single toggle`);
+
     try {
 
         // Try cache first
-        console.log(`[ROUTE] GET /api/toggles/${name} - Checking cache`);
+
         const cached = await cache.getToggle(name);
         if (cached) {
-            console.log(`[ROUTE] GET /api/toggles/${name} - Cache hit`);
+
             const apiToggle = toApiFormat(cached);
             return res.json({
                 success: true,
@@ -206,7 +204,7 @@ router.get('/:name', async (req: Request, res: Response) => {
         }
 
         // Fetch from database
-        console.log(`[ROUTE] GET /api/toggles/${name} - Fetching from database`);
+
         const toggle = await getDb().getToggle(name);
 
         if (!toggle) {
@@ -220,7 +218,7 @@ router.get('/:name', async (req: Request, res: Response) => {
         // Cache the result
         await cache.setToggle(name, toggle);
 
-        console.log(`[ROUTE] GET /api/toggles/${name} - Toggle found and returned`);
+
         const apiToggle = toApiFormat(toggle);
         res.json({
             success: true,
@@ -304,7 +302,7 @@ router.get('/:name/history', async (req: Request, res: Response) => {
 // POST /api/toggles - Create a new toggle
 // =============================================================================
 router.post('/', async (req: Request, res: Response) => {
-    console.log('[ROUTE] POST /api/toggles - Creating new toggle', { name: req.body.name, category: req.body.category });
+
     try {
         // Validate input
         const validation = validateCreateToggle(req.body);
@@ -322,7 +320,7 @@ router.post('/', async (req: Request, res: Response) => {
         // Check if toggle already exists
         const existing = await getDb().getToggle(name);
         if (existing) {
-            console.log(`[ROUTE] POST /api/toggles - Toggle '${name}' already exists`);
+
             return res.status(409).json({
                 success: false,
                 error: `Toggle '${name}' already exists`,
@@ -339,7 +337,6 @@ router.post('/', async (req: Request, res: Response) => {
         // Invalidate cache
         await cache.invalidateAll();
 
-        console.log(`[ROUTE] POST /api/toggles - 🎛️ Toggle '${name}' created by ${getClientIdentifier(req)}`);
 
         res.status(201).json({
             success: true,
@@ -360,7 +357,7 @@ router.post('/', async (req: Request, res: Response) => {
 // POST /api/toggles/bulk - Bulk update toggles
 // =============================================================================
 router.post('/bulk', async (req: Request, res: Response) => {
-    console.log('[ROUTE] POST /api/toggles/bulk - Bulk update request', { count: req.body.toggles?.length });
+
     try {
         // Validate input
         const validation = validateBulkUpdate(req.body);
@@ -381,7 +378,6 @@ router.post('/bulk', async (req: Request, res: Response) => {
         // Invalidate cache
         await cache.invalidateAll();
 
-        console.log(`[ROUTE] POST /api/toggles/bulk - 🎛️ Bulk update: ${results.length} toggles updated by ${clientId}`);
 
         res.json({
             success: true,
@@ -406,7 +402,7 @@ router.post('/bulk', async (req: Request, res: Response) => {
 // =============================================================================
 router.patch('/:name', async (req: Request, res: Response) => {
     const { name } = req.params;
-    console.log(`[ROUTE] PATCH /api/toggles/${name} - Updating toggle`, { enabled: req.body.enabled });
+
     try {
 
         // Validate input
@@ -436,7 +432,6 @@ router.patch('/:name', async (req: Request, res: Response) => {
         // Invalidate cache
         await cache.invalidateToggle(name);
 
-        console.log(`[ROUTE] PATCH /api/toggles/${name} - 🎛️ Toggle set to ${enabled ? 'ENABLED' : 'DISABLED'} by ${clientId}`);
 
         res.json({
             success: true,
@@ -458,7 +453,7 @@ router.patch('/:name', async (req: Request, res: Response) => {
 // =============================================================================
 router.patch('/:name/metadata', async (req: Request, res: Response) => {
     const { name } = req.params;
-    console.log(`[ROUTE] PATCH /api/toggles/${name}/metadata - Updating metadata`);
+
     try {
 
         // Validate input
@@ -488,7 +483,6 @@ router.patch('/:name/metadata', async (req: Request, res: Response) => {
         // Invalidate cache
         await cache.invalidateToggle(name);
 
-        console.log(`[ROUTE] PATCH /api/toggles/${name}/metadata - 🎛️ Metadata updated by ${clientId}`);
 
         res.json({
             success: true,
@@ -510,7 +504,7 @@ router.patch('/:name/metadata', async (req: Request, res: Response) => {
 // =============================================================================
 router.delete('/:name', async (req: Request, res: Response) => {
     const { name } = req.params;
-    console.log(`[ROUTE] DELETE /api/toggles/${name} - Deleting toggle`);
+
     try {
         const clientId = getClientIdentifier(req);
 
@@ -527,7 +521,6 @@ router.delete('/:name', async (req: Request, res: Response) => {
         // Invalidate cache
         await cache.invalidateToggle(name);
 
-        console.log(`[ROUTE] DELETE /api/toggles/${name} - 🎛️ Toggle deleted by ${clientId}`);
 
         res.json({
             success: true,

@@ -33,9 +33,9 @@ export class CacheManager {
      * Initialize in-memory cache
      */
     async initialize(): Promise<boolean> {
-        console.log('[CACHE] Initializing in-memory cache...');
+
         if (this.initialized) {
-            console.log('[CACHE] Already initialized, skipping...');
+
             return true;
         }
 
@@ -49,7 +49,7 @@ export class CacheManager {
         this.cleanupInterval = setInterval(() => this.cleanup(), 30_000);
 
         this.initialized = true;
-        console.log('[CACHE] ✅ In-memory cache initialized successfully');
+
         return true;
     }
 
@@ -65,7 +65,7 @@ export class CacheManager {
      */
     async getToggle(name: string): Promise<Toggle | null> {
         if (!this.isAvailable()) {
-            console.log(`[CACHE] [GET] Cache unavailable for toggle: ${name}`);
+
             return null;
         }
 
@@ -73,7 +73,7 @@ export class CacheManager {
         const entry = this.store.get(key);
 
         if (entry && entry.expiresAt > Date.now()) {
-            console.log(`[CACHE] [HIT] Toggle '${name}' found in cache`);
+
             return entry.data;
         }
 
@@ -82,7 +82,7 @@ export class CacheManager {
             this.store.delete(key);
         }
 
-        console.log(`[CACHE] [MISS] Toggle '${name}' not in cache`);
+
         return null;
     }
 
@@ -91,17 +91,17 @@ export class CacheManager {
      */
     async setToggle(name: string, toggle: Toggle): Promise<void> {
         if (!this.isAvailable()) {
-            console.log(`[CACHE] [SET] Cache unavailable, skipping set for: ${name}`);
+
             return;
         }
 
-        console.log(`[CACHE] [SET] Caching toggle: ${name}`);
+
         const key = `${this.cacheKeyPrefix}${name}`;
         this.store.set(key, {
             data: toggle,
             expiresAt: Date.now() + (this.cacheTtlSeconds * 1000),
         });
-        console.log(`[CACHE] [SET] Toggle '${name}' cached successfully`);
+
     }
 
     /**
@@ -109,13 +109,13 @@ export class CacheManager {
      */
     async getAllToggles(): Promise<Toggle[] | null> {
         if (!this.isAvailable()) {
-            console.log('[CACHE] [GET-ALL] Cache unavailable');
+
             return null;
         }
 
         const entry = this.store.get(this.allTogglesKey);
         if (entry && entry.expiresAt > Date.now()) {
-            console.log(`[CACHE] [HIT-ALL] Found ${entry.data.length} toggles in cache`);
+
             return entry.data;
         }
 
@@ -124,7 +124,7 @@ export class CacheManager {
             this.store.delete(this.allTogglesKey);
         }
 
-        console.log('[CACHE] [MISS-ALL] All toggles not in cache');
+
         return null;
     }
 
@@ -133,11 +133,11 @@ export class CacheManager {
      */
     async setAllToggles(toggles: Toggle[]): Promise<void> {
         if (!this.isAvailable()) {
-            console.log('[CACHE] [SET-ALL] Cache unavailable, skipping');
+
             return;
         }
 
-        console.log(`[CACHE] [SET-ALL] Caching ${toggles.length} toggles`);
+
         const expiresAt = Date.now() + (this.cacheTtlSeconds * 1000);
 
         this.store.set(this.allTogglesKey, { data: toggles, expiresAt });
@@ -149,7 +149,7 @@ export class CacheManager {
                 expiresAt,
             });
         }
-        console.log(`[CACHE] [SET-ALL] ${toggles.length} toggles cached successfully`);
+
     }
 
     /**
@@ -157,14 +157,14 @@ export class CacheManager {
      */
     async invalidateToggle(name: string): Promise<void> {
         if (!this.isAvailable()) {
-            console.log(`[CACHE] [INVALIDATE] Cache unavailable, skipping for: ${name}`);
+
             return;
         }
 
-        console.log(`[CACHE] [INVALIDATE] Invalidating cache for toggle: ${name}`);
+
         this.store.delete(`${this.cacheKeyPrefix}${name}`);
         this.store.delete(this.allTogglesKey);
-        console.log(`[CACHE] [INVALIDATE] Cache invalidated for toggle: ${name}`);
+
     }
 
     /**
@@ -172,25 +172,25 @@ export class CacheManager {
      */
     async invalidateAll(): Promise<void> {
         if (!this.isAvailable()) {
-            console.log('[CACHE] [INVALIDATE-ALL] Cache unavailable, skipping');
+
             return;
         }
 
-        console.log('[CACHE] [INVALIDATE-ALL] Invalidating all cached toggles');
+
         this.store.clear();
-        console.log('[CACHE] [INVALIDATE-ALL] All cache invalidated successfully');
+
     }
 
     /**
      * Health check
      */
     async healthCheck(): Promise<{ healthy: boolean; latencyMs: number }> {
-        console.log('[CACHE] [HEALTH] Performing health check...');
+
         if (!this.isAvailable()) {
-            console.log('[CACHE] [HEALTH] Cache not initialized');
+
             return { healthy: false, latencyMs: 0 };
         }
-        console.log('[CACHE] [HEALTH] Health check passed (in-memory)');
+
         return { healthy: true, latencyMs: 0 };
     }
 
@@ -207,7 +207,7 @@ export class CacheManager {
             }
         }
         if (cleaned > 0) {
-            console.log(`[CACHE] Cleaned up ${cleaned} expired entries`);
+
         }
     }
 
@@ -215,14 +215,14 @@ export class CacheManager {
      * Close cache (cleanup resources)
      */
     async close(): Promise<void> {
-        console.log('[CACHE] Closing in-memory cache...');
+
         if (this.cleanupInterval) {
             clearInterval(this.cleanupInterval);
             this.cleanupInterval = null;
         }
         this.store.clear();
         this.initialized = false;
-        console.log('[CACHE] In-memory cache closed');
+
     }
 }
 
