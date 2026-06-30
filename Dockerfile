@@ -42,8 +42,8 @@ COPY feature-toggle/backend ./
 # Build TypeScript
 RUN npm run build
 
-# Copy frontend build from builder stage
-COPY --from=frontend-builder /app/frontend/dist /app/backend/public
+# Copy frontend build from builder stage with strict ownership
+COPY --chown=nextjs:nodejs --from=frontend-builder /app/frontend/dist /app/backend/public
 
 # Change ownership to non-root user
 RUN chown -R nextjs:nodejs /app
