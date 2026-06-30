@@ -1,15 +1,7 @@
 # Node Service .dockerignore
-# Ignore everything by default
-**
-
-# Allow build context essentials
-!feature-toggle/
-!shared/
-
-# Specific ignores
-feature-toggle/node_modules
-feature-toggle/dist
-feature-toggle/.env
-feature-toggle/coverage
-shared/node_modules
-shared/dist
+node_modules/
+dist/
+.env
+.env.*
+coverage/
+.git/
