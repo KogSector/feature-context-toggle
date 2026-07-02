@@ -63,7 +63,7 @@ interface DatabaseConfig {
   port: number;
   database: string;
   user: string;
-  password: string;
+  password?: string;
   schema: string;
 }
 
@@ -115,10 +115,7 @@ export class DatabaseManager {
 
 
 
-    // Set default schema on connection (safe - validated above)
-    this.pool.on('connect', (client) => {
-      client.query(`SET search_path TO ${this.config.schema}, public`);
-    });
+
 
     // Log pool errors
     this.pool.on('error', (err) => {
