@@ -20,11 +20,13 @@ import { logger } from './utils/logger.js';
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
-// Try resolving local .env.map and .env.secret from backend dir and root dir
+// Try resolving local .env.map, .env.secret and .env.local from backend dir and root dir
 dotenv.config({ path: path.resolve(process.cwd(), '.env.map') });
 dotenv.config({ path: path.resolve(process.cwd(), '.env.secret') });
+dotenv.config({ path: path.resolve(process.cwd(), '.env.local') });
 dotenv.config({ path: path.resolve(__dirname, '../../.env.map') });
 dotenv.config({ path: path.resolve(__dirname, '../../.env.secret') });
+dotenv.config({ path: path.resolve(__dirname, '../../.env.local') });
 
 // Load configuration first (validates required env vars)
 logger.info('[STARTUP] Loading configuration...');
