@@ -10,7 +10,7 @@ Developer feature toggle dashboard for the ConFuse platform. This is a private d
 >
 > Changes take effect after restarting the affected service(s).
 
-## Quick Start
+## How to run the microservice
 
 ```bash
 # Install dependencies
