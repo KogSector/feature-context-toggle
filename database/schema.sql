@@ -94,7 +94,8 @@ INSERT INTO public.toggles (name, enabled, description, category, category_type,
 ('enableURLs', false, 'Enable URLs pipeline and feature', 'features', 'userFacing', '{}'::jsonb),
 ('enableChats', false, 'Enable chats pipeline and feature', 'features', 'userFacing', '{}'::jsonb),
 ('enableDesign', false, 'Enable design options feature', 'features', 'userFacing', '{}'::jsonb),
-('deployedTesting', false, 'Enable deployed testing limits and UI', 'features', 'userFacing', '{}'::jsonb)
+('deployedTesting', false, 'Enable deployed testing limits and UI', 'features', 'userFacing', '{}'::jsonb),
+('enableDeployedMcp', false, 'Enable deployed MCP server URL', 'features', 'userFacing', '{}'::jsonb)
 ON CONFLICT (name) DO NOTHING;
 
 -- =============================================================================
