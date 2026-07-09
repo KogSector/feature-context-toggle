@@ -59,6 +59,6 @@ INSERT INTO feature_toggles.toggles (name, enabled, description, category, categ
 ('enableChats', false, 'Enable chats pipeline and feature', 'features', 'userFacing', '{}'::jsonb),
 ('enableDesign', false, 'Enable design options feature', 'features', 'userFacing', '{}'::jsonb),
 ('deployedTesting', false, 'Enable deployed testing limits and UI', 'features', 'userFacing', '{}'::jsonb),
-('enableDeployedMcp', false, 'Enable deployed MCP server URL', 'features', 'userFacing', '{}'::jsonb)
+('enableDeployedUrls', false, 'Use deployed production URLs for all services', 'features', 'userFacing', '{}'::jsonb)
 ON CONFLICT (name) DO NOTHING;
 
