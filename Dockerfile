@@ -42,6 +42,9 @@ COPY backend ./
 # Build TypeScript
 RUN npm run build
 
+# Remove dev dependencies from production image
+RUN npm prune --omit=dev 2>/dev/null || true
+
 # Copy frontend build from builder stage with strict ownership
 COPY --chown=nextjs:nodejs --from=frontend-builder /app/frontend/dist /app/backend/public
 
