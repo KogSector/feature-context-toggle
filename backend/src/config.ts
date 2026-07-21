@@ -24,7 +24,6 @@ export interface Config {
         password?: string;
         schema: string;
         ssl: boolean;
-        useContainer: boolean;
     };
 
     // Cache
@@ -102,30 +101,29 @@ export function loadConfig(): Config {
         nodeEnv,
         isProduction: nodeEnv === 'production',
 
-        // Database - supports both container and NeonDB
+        // Database - NeonDB cloud PostgreSQL
         db: (() => {
-            let host = getRequired('DB_HOST');
-            let port = getInt('DB_PORT');
-            let name = getRequired('DB_NAME');
-            let user = getRequired('DB_USER');
-            let password = process.env.DB_PASSWORD; // optional
-            let ssl = process.env.DB_SSL === 'true';
+            const dbUrl = getRequired('DATABASE_URL');
+            let host: string;
+            let port: number;
+            let name: string;
+            let user: string;
+            let password: string | undefined;
+            let ssl = true;
 
-            const dbUrl = process.env.DATABASE_URL;
-            if (dbUrl) {
-                try {
-                    const parsedUrl = new URL(dbUrl);
-                    host = parsedUrl.hostname;
-                    port = parsedUrl.port ? parseInt(parsedUrl.port, 10) : 5432;
-                    name = parsedUrl.pathname.replace(/^\//, '');
-                    user = decodeURIComponent(parsedUrl.username);
-                    password = decodeURIComponent(parsedUrl.password);
-                    if (dbUrl.includes('sslmode=require') || dbUrl.includes('ssl=true')) {
-                        ssl = true;
-                    }
-                } catch (e) {
-                    console.error('Failed to parse DATABASE_URL from environment:', e);
+            try {
+                const parsedUrl = new URL(dbUrl);
+                host = parsedUrl.hostname;
+                port = parsedUrl.port ? parseInt(parsedUrl.port, 10) : 5432;
+                name = parsedUrl.pathname.replace(/^\//, '');
+                user = decodeURIComponent(parsedUrl.username);
+                password = decodeURIComponent(parsedUrl.password);
+                if (dbUrl.includes('sslmode=require') || dbUrl.includes('ssl=true')) {
+                    ssl = true;
                 }
+            } catch (e) {
+                console.error('Failed to parse DATABASE_URL from environment:', e);
+                throw new Error('Invalid DATABASE_URL format');
             }
 
             return {
@@ -136,7 +134,6 @@ export function loadConfig(): Config {
                 password,
                 schema: getRequired('DB_SCHEMA'),
                 ssl,
-                useContainer: false,
             };
         })(),
 

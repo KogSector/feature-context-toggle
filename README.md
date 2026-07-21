@@ -213,22 +213,16 @@ Log prefixes:
 
 ## Database Configuration
 
-The service supports two database modes via `USE_CONTAINER_DB` environment variable:
-
-| Mode | Description |
-|------|-------------|
-| `USE_CONTAINER_DB=false` | Use NeonDB (cloud PostgreSQL) - **default** |
-| `USE_CONTAINER_DB=true` | Use local PostgreSQL container |
+The service uses NeonDB (cloud PostgreSQL) as the database.
 
 ## Environment Variables
 
 | Variable | Description | Default |
 |----------|-------------|---------|
 | `PORT` | Backend server port | `3099` |
-| `USE_CONTAINER_DB` | Use container or NeonDB | `false` |
+| `DATABASE_URL` | NeonDB connection URL | Required |
+| `DB_SCHEMA` | Database schema | `feature_toggles` |
 | `REDIS_URL` | Redis connection URL | Required |
-| `NEON_DB_HOST` | NeonDB host (if cloud) | Required |
-| `DB_HOST` | Container DB host | `localhost` |
 
 ## License
 
