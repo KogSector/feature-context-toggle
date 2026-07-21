@@ -7,11 +7,11 @@ const pool = new Pool({
 async function run() {
   try {
     await pool.query(`
-      INSERT INTO public.toggles (name, enabled, description, category, category_type, metadata) 
-      VALUES ('enableDeployedMcp', false, 'Enable deployed MCP server URL', 'features', 'userFacing', '{}'::jsonb)
+      INSERT INTO public.toggles (name, enabled, description, category, category_type, metadata)
+      VALUES ('agentRules', false, 'Enable Agent Rules configuration feature', 'features', 'userFacing', '{}'::jsonb)
       ON CONFLICT (name) DO UPDATE SET enabled = EXCLUDED.enabled;
     `);
-    console.log("Toggle 'enableDeployedMcp' added successfully!");
+    console.log("Toggle 'agentRules' added successfully!");
   } catch (err) {
     console.error("Error inserting toggle:", err);
   } finally {
