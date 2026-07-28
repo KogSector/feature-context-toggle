@@ -238,7 +238,7 @@ export class DatabaseManager {
   async getToggle(name: string): Promise<Toggle | null> {
 
     const result = await this.pool.query(
-      'SELECT * FROM toggles WHERE name = $1',
+      `SELECT * FROM ${this.config.schema}.toggles WHERE name = $1`,
       [name]
     );
     const toggle = result.rows[0] || null;
@@ -251,7 +251,7 @@ export class DatabaseManager {
    */
   async getAllToggles(category?: string, categoryType?: string): Promise<Toggle[]> {
 
-    let query = 'SELECT * FROM toggles';
+    let query = `SELECT * FROM ${this.config.schema}.toggles`;
     const params: string[] = [];
     const conditions: string[] = [];
 
@@ -293,7 +293,7 @@ export class DatabaseManager {
 
       // Insert the toggle
       const result = await client.query(
-        `INSERT INTO toggles (name, enabled, description, category, category_type, metadata)
+        `INSERT INTO ${this.config.schema}.toggles (name, enabled, description, category, category_type, metadata)
                  VALUES ($1, $2, $3, $4, $5, $6)
                  RETURNING *`,
         [
@@ -344,7 +344,7 @@ export class DatabaseManager {
       await client.query('BEGIN');
 
       // Get current state for audit
-      const current = await client.query('SELECT * FROM toggles WHERE name = $1', [name]);
+      const current = await client.query(`SELECT * FROM ${this.config.schema}.toggles WHERE name = $1`, [name]);
 
       if (current.rows.length === 0) {
         await client.query('ROLLBACK');
@@ -360,7 +360,7 @@ export class DatabaseManager {
 
       // Update the toggle
       const result = await client.query(
-        'UPDATE toggles SET enabled = $1, updated_at = CURRENT_TIMESTAMP WHERE name = $2 RETURNING *',
+        `UPDATE ${this.config.schema}.toggles SET enabled = $1, updated_at = CURRENT_TIMESTAMP WHERE name = $2 RETURNING *`,
         [enabled, name]
       );
 
@@ -405,7 +405,7 @@ export class DatabaseManager {
       await client.query('BEGIN');
 
       // Get current state for audit
-      const current = await client.query('SELECT * FROM toggles WHERE name = $1', [name]);
+      const current = await client.query(`SELECT * FROM ${this.config.schema}.toggles WHERE name = $1`, [name]);
 
       if (current.rows.length === 0) {
         await client.query('ROLLBACK');
@@ -416,7 +416,7 @@ export class DatabaseManager {
 
       // Update the metadata
       const result = await client.query(
-        'UPDATE toggles SET metadata = $1, updated_at = CURRENT_TIMESTAMP WHERE name = $2 RETURNING *',
+        `UPDATE ${this.config.schema}.toggles SET metadata = $1, updated_at = CURRENT_TIMESTAMP WHERE name = $2 RETURNING *`,
         [JSON.stringify(metadata), name]
       );
 
@@ -454,7 +454,7 @@ export class DatabaseManager {
       await client.query('BEGIN');
 
       // Get current state for audit
-      const current = await client.query('SELECT * FROM toggles WHERE name = $1', [name]);
+      const current = await client.query(`SELECT * FROM ${this.config.schema}.toggles WHERE name = $1`, [name]);
 
       if (current.rows.length === 0) {
         await client.query('ROLLBACK');
@@ -464,7 +464,7 @@ export class DatabaseManager {
       const previousToggle = current.rows[0];
 
       // Delete the toggle
-      await client.query('DELETE FROM toggles WHERE name = $1', [name]);
+      await client.query(`DELETE FROM ${this.config.schema}.toggles WHERE name = $1`, [name]);
 
       // Log the deletion
       await this.logAudit(client, {
