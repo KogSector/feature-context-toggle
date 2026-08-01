@@ -184,7 +184,7 @@ router.get('/audit', async (req: Request, res: Response) => {
 // GET /api/toggles/:name - Get a specific toggle
 // =============================================================================
 router.get('/:name', async (req: Request, res: Response) => {
-    const { name } = req.params;
+    const name = req.params.name as string;
 
     try {
 
@@ -267,7 +267,7 @@ router.post('/logs', async (req: Request, res: Response) => {
 // =============================================================================
 router.get('/:name/history', async (req: Request, res: Response) => {
     try {
-        const { name } = req.params;
+        const name = req.params.name as string;
         const config = getConfig();
         const limit = parseInt(req.query.limit as string) || config.apiLimits.defaultHistoryLimit;
 
@@ -401,7 +401,7 @@ router.post('/bulk', async (req: Request, res: Response) => {
 // PATCH /api/toggles/:name - Update toggle enabled state
 // =============================================================================
 router.patch('/:name', async (req: Request, res: Response) => {
-    const { name } = req.params;
+    const name = req.params.name as string;
 
     try {
 
@@ -452,7 +452,7 @@ router.patch('/:name', async (req: Request, res: Response) => {
 // PATCH /api/toggles/:name/metadata - Update toggle metadata
 // =============================================================================
 router.patch('/:name/metadata', async (req: Request, res: Response) => {
-    const { name } = req.params;
+    const name = req.params.name as string;
 
     try {
 
@@ -503,7 +503,7 @@ router.patch('/:name/metadata', async (req: Request, res: Response) => {
 // DELETE /api/toggles/:name - Delete a toggle
 // =============================================================================
 router.delete('/:name', async (req: Request, res: Response) => {
-    const { name } = req.params;
+    const name = req.params.name as string;
 
     try {
         const clientId = getClientIdentifier(req);
