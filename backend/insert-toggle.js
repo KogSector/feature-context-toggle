@@ -8,10 +8,12 @@ async function run() {
   try {
     await pool.query(`
       INSERT INTO feature_toggles.toggles (name, enabled, description, category, category_type, metadata)
-      VALUES ('agentRules', false, 'Enable Agent Rules configuration feature', 'features', 'userFacing', '{}'::jsonb)
+      VALUES 
+        ('agentRules', false, 'Enable Agent Rules configuration feature', 'features', 'userFacing', '{}'::jsonb),
+        ('enableCloudLogs', true, 'Enable cloud log ingestion and temporal retention', 'features', 'userFacing', '{}'::jsonb)
       ON CONFLICT (name) DO UPDATE SET enabled = EXCLUDED.enabled;
     `);
-    console.log("Toggle 'agentRules' added successfully!");
+    console.log("Toggles added successfully!");
   } catch (err) {
     console.error("Error inserting toggle:", err);
   } finally {
