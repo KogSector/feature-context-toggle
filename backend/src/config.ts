@@ -118,7 +118,10 @@ export function loadConfig(): Config {
                 name = parsedUrl.pathname.replace(/^\//, '');
                 user = decodeURIComponent(parsedUrl.username);
                 password = decodeURIComponent(parsedUrl.password);
-                if (dbUrl.includes('sslmode=require') || dbUrl.includes('ssl=true')) {
+                if (dbUrl.includes('sslmode=verify-full')) {
+                    ssl = true;
+                } else if (dbUrl.includes('sslmode=require') || dbUrl.includes('ssl=true')) {
+                    // For backward compatibility, but prefer 'sslmode=verify-full'
                     ssl = true;
                 }
             } catch (e) {
