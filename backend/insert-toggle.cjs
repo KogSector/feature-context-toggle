@@ -10,7 +10,8 @@ async function run() {
       INSERT INTO public.toggles (name, enabled, description, category, category_type, metadata)
       VALUES 
         ('agentRules', false, 'Enable Agent Rules configuration feature', 'features', 'userFacing', '{}'::jsonb),
-        ('enableCloudLogs', true, 'Enable cloud log ingestion and temporal retention', 'features', 'userFacing', '{}'::jsonb)
+        ('enableCloudLogs', true, 'Enable cloud log ingestion and temporal retention', 'features', 'userFacing', '{}'::jsonb),
+        ('enableMicrosoftAuth', false, 'Enable Microsoft Authentication login option', 'features', 'userFacing', '{}'::jsonb)
       ON CONFLICT (name) DO UPDATE SET enabled = EXCLUDED.enabled;
     `);
     console.log("Toggles added successfully!");

@@ -61,6 +61,7 @@ INSERT INTO feature_toggles.toggles (name, enabled, description, category, categ
 ('deployedTesting', false, 'Enable deployed testing limits and UI', 'features', 'userFacing', '{}'::jsonb),
 ('enableDeployedUrls', false, 'Use deployed production URLs for all services', 'features', 'userFacing', '{}'::jsonb),
 ('agentRules', false, 'Enable Agent Rules configuration feature', 'features', 'userFacing', '{}'::jsonb),
-('enableCloudLogs', true, 'Enable cloud log ingestion and temporal retention', 'features', 'userFacing', '{}'::jsonb)
+('enableCloudLogs', true, 'Enable cloud log ingestion and temporal retention', 'features', 'userFacing', '{}'::jsonb),
+('enableMicrosoftAuth', false, 'Enable Microsoft Authentication login option', 'features', 'userFacing', '{}'::jsonb)
 ON CONFLICT (name) DO NOTHING;
 
