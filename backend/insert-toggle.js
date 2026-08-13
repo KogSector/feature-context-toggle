@@ -1,7 +1,7 @@
 const { Pool } = require('pg');
 
 const pool = new Pool({
-  connectionString: 'postgresql://neondb_owner:npg_PfJsZg49bUxT@ep-small-voice-a1o0n6xl-pooler.ap-southeast-1.aws.neon.tech/neondb?sslmode=require'
+  connectionString: 'postgresql://neondb_owner:npg_nwMBCeG2rpW5@ep-twilight-moon-azzl2ubh-pooler.c-3.ap-southeast-1.aws.neon.tech/neondb?sslmode=require&channel_binding=require'
 });
 
 async function run() {
@@ -10,7 +10,8 @@ async function run() {
       INSERT INTO feature_toggles.toggles (name, enabled, description, category, category_type, metadata)
       VALUES 
         ('agentRules', false, 'Enable Agent Rules configuration feature', 'features', 'userFacing', '{}'::jsonb),
-        ('enableCloudLogs', true, 'Enable cloud log ingestion and temporal retention', 'features', 'userFacing', '{}'::jsonb)
+        ('enableCloudLogs', true, 'Enable cloud log ingestion and temporal retention', 'features', 'userFacing', '{}'::jsonb),
+        ('enableMicrosoftAuth', false, 'Enable Microsoft Authentication login option', 'features', 'userFacing', '{}'::jsonb)
       ON CONFLICT (name) DO UPDATE SET enabled = EXCLUDED.enabled;
     `);
     console.log("Toggles added successfully!");
