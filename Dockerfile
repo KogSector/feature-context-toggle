@@ -1,6 +1,6 @@
 # =============================================================================
 # Feature Toggle Service - Dockerfile (Node.js 22 LTS)
-# Optimized for Azure Container Apps deployment
+# Optimized for Render deployment
 # Role: Central feature toggle service for the ConFuse platform
 # Includes both backend API and frontend dashboard
 # =============================================================================
@@ -53,7 +53,7 @@ RUN chown -R nextjs:nodejs /app
 USER nextjs
 
 # =============================================================================
-# Environment Variables (configure via Azure Container Apps environment settings)
+# Environment Variables (configure via Render environment settings)
 # =============================================================================
 # Required:
 #   DATABASE_URL
@@ -67,7 +67,7 @@ ENV PORT=3099
 
 EXPOSE 3099
 
-# Health check optimized for Azure Container Apps
+# Health check optimized for Render
 HEALTHCHECK --interval=30s --timeout=10s --start-period=60s --retries=3 \
     CMD curl -f http://localhost:${PORT:-3099}/health || exit 1
 
